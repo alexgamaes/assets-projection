@@ -49,7 +49,12 @@ Plans:
   3. The return-by-tier anchors reflect the corrected Fagereng framing (raw ~500bp / ~10pp net-of-tax association — NOT a flat 18pp per-tier gap), triangulated across cited anchors, with no single hardcoded "18" in the engine
   4. The drag-strength parameter has a documented derivation anchored to the McKinsey ~80% figure without implying a finite-pie transfer
   5. The engine, running on these real defaults, produces a divergence sanity-check that no tier exceeds plausible bounds within the default horizon
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 02-01-PLAN.md — CR-01/CR-02 fail-loud guards + negative tests (must merge green before any real data)
+- [ ] 02-02-PLAN.md — SourceRecord type migration + Phase 1 fixture migration
+- [ ] 02-03-PLAN.md — Triangulated calibrated defaults + citation registry + PROJECT.md ~18pp correction
+- [ ] 02-04-PLAN.md — Sourcing-completeness gate + dragStrength back-solve + divergence sanity + D-09 invariant re-run
 
 ### Phase 3: Selectors, Visualization & Neutrality Style Guide
 **Goal**: The engine's output is made legible through three neutral chart types (time-series growth, multi-tier divergence overlay, relative-position trajectory) driven by memoized selectors, with a linear/log toggle, hover/tap tooltips, visible source citations, and an explicit neutrality style guide artifact governing copy and palette.
@@ -100,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
-| 2. Empirical Data & Parameter Calibration | 0/TBD | Not started | - |
+| 2. Empirical Data & Parameter Calibration | 0/4 | Not started | - |
 | 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
