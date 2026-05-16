@@ -607,7 +607,7 @@ tooltip: {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **vitest.config.ts vs vite.config.ts merge**
    - What we know: The existing `vitest.config.ts` at project root must be replaced (or deleted) when `vite.config.ts` is created, since both configure the same Vitest runner and would conflict.
