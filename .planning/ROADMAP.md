@@ -147,11 +147,19 @@ Plans:
   5. Each chart carries a mandatory neutral caption clarifying shares can shift while every tier's real wealth still grows (no zero-sum implication), consistent with the D-15 disclosure pattern
   6. Shares are fractions of total, so they are basis-invariant — the view must not change with the real/nominal toggle; this is asserted in tests
 
-**Plans**: TBD
-**UI hint**: yes
-
+**Plans**: 3 plans
 Plans:
-- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+**Wave 0**
+
+- [ ] 04.1-01-PLAN.md — Pure engine: deriveBandShares + Wave-0 test suite (band-sum, Pareto fixture, D-12 basis-invariance)
+
+**Wave 1** *(blocked on Wave 0)*
+
+- [ ] 04.1-02-PLAN.md — selectShareOption/selectDonutOption + SHARE_CAPTION + TierShareChart/DonutChart + VIZ-07 selector tests
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 04.1-03-PLAN.md — NEUTRALITY-STYLE-GUIDE D-16 Section 7 + AppShell composition (Chart 4 + Chart 5) + human-verify checkpoint
 
 ### Phase 5: Neutrality Review & Release Readiness
 
@@ -180,5 +188,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
-| 4.1. Tier Share-of-Economy Visualization | 0/TBD | Not started | - |
+| 4.1. Tier Share-of-Economy Visualization | 0/3 | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
