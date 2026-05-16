@@ -55,6 +55,7 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 
 - **Phase 1 (Model Foundation) complete (2026-05-16):** pure, framework-free, deterministic projection engine — heterogeneous returns by percentile, asset-price-inflation drag, relative-position derivation, nominal/real basis invariant — proven by 44 numerical unit tests (tsc strict, 0 todo). Library only; no UI/IO. Requirements stay in Active (ship-to-validate semantics; engine not yet user-facing).
 - **Carried into Phase 2:** documented preconditions from review CR-01/CR-02 — calibration must keep Pareto alpha > 1 (top01/top1 < 10) and validate bisect bracket coverage before loading real empirical anchors (see `.planning/phases/01-model-foundation/01-HUMAN-UAT.md`).
+- **Phase 2 (Empirical Data & Parameter Calibration) complete (2026-05-16):** frozen, citation-annotated `DEFAULTS` (`src/data/defaults.ts` + `src/data/sources.ts`) — return-by-tier curve, back-solved `dragStrength` (McKinsey ~80% asset-inflation share), tier boundaries, horizon — every shipped value carries a complete `SourceRecord`, build-enforced by a sourcing-completeness Vitest gate. CR-01/CR-02 latent bugs hardened to fail loud. 58 tests, tsc strict. One open manual item: DATA-02 primary-source faithfulness cross-check (`02-HUMAN-UAT.md`). Requirements stay in Active (ship-to-validate; not yet user-facing).
 
 ## Context
 
@@ -111,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-16 after Phase 1 (Model Foundation) completion*
+*Last updated: 2026-05-16 after Phase 2 (Empirical Data & Parameter Calibration) completion*
