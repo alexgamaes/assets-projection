@@ -44,18 +44,55 @@ export function assertReal(p: { basis: 'real' | 'nominal' }, ctx: string): void 
 // ---------------------------------------------------------------------------
 
 /**
+ * Structured citation record for a single empirical figure (D-10).
+ *
+ * Replaces the freeform `string | null` placeholder in SourcedParam.source.
+ * Every shipped SourcedParam must carry a complete SourceRecord — the six
+ * required fields make the citation auditable and machine-checkable by the
+ * Wave D sourcing-completeness gate. The optional `note` and `url` fields
+ * carry the correction trail and Phase 3 VIZ-06 footer link respectively.
+ *
+ * This is an authoritative export contract consumed by Phases 3 and 4 (D-10).
+ * Reuses the `'real' | 'nominal'` union for `basis` so it stays consistent
+ * with `assertReal()` and the engine's branded-basis vocabulary (A2).
+ */
+export interface SourceRecord {
+  /** Full citation: author(s), year, and publication. E.g. "Fagereng et al. (2020), Econometrica". */
+  sourceName: string;
+  /** The exact figure taken from the source, including units. E.g. "net-of-tax 10pp 10th→90th net-worth association". */
+  figureUsed: string;
+  /** Whether the cited figure is real (inflation-adjusted) or nominal — reuses the engine's branded union (D-10/A2). */
+  basis: 'real' | 'nominal';
+  /** Population scope, percentile definition, gross/net treatment, and time period — guards against mis-defined parameters (Pitfall 1). */
+  definition: string;
+  /** Data vintage: the observation period of the underlying data. E.g. "Norway admin records, 2004–2015". */
+  yearVintage: string;
+  /** ISO date the figure was read from the primary source. E.g. "2026-05-16". */
+  retrievedDate: string;
+  /**
+   * Optional correction trail or methodological caveat (D-06).
+   * Carries the discarded-estimate explanation (e.g. why a misread cross-percentile
+   * association was replaced by a per-tier return estimate) and survivorship/geo-vs-arith notes.
+   */
+  note?: string;
+  /** Optional primary-source URL. Rendered in the Phase 3 VIZ-06 citation footer. */
+  url?: string;
+}
+
+/**
  * A single sourced parameter value.
  *
- * Phase-2-ready: synthetic placeholders use source:null; Phase 2 fills real citations.
- * All SourcedParams carry an explicit basis tag so assertReal() can be called at boundaries.
+ * Phase-2-ready: source is a structured SourceRecord (D-10) replacing the
+ * former `string | null` placeholder. All SourcedParams carry an explicit
+ * basis tag so assertReal() can be called at boundaries.
  */
 export interface SourcedParam {
   /** The parameter value (plain number — basis declared separately). */
   value: number;
   /** Whether this value is real (inflation-adjusted) or nominal. */
   basis: 'real' | 'nominal';
-  /** Citation string for empirically sourced values; null for synthetic placeholders. */
-  source: string | null;
+  /** Structured citation record (D-10). Every SourcedParam must carry a complete SourceRecord. */
+  source: SourceRecord;
   /** Optional explanatory note. */
   note?: string;
 }
