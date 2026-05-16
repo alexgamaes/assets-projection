@@ -35,7 +35,7 @@
  * Sources: DATA-01, DATA-02, DATA-03, D-04, D-05, D-06, D-07, D-08, D-10, D-11
  */
 
-import type { Params } from '../core/types.js';
+import type { Params, SourcedParam } from '../core/types.js';
 import { SOURCES } from './sources.js';
 
 // ---------------------------------------------------------------------------
@@ -403,3 +403,90 @@ export const DEFAULTS: Params = Object.freeze({
     }),
   }),
 } satisfies Params);
+
+// ---------------------------------------------------------------------------
+// SEED_WEALTH — UX default for the "current wealth" entry (D-02 / ENTRY-01)
+//
+// Exported separately from DEFAULTS because Params does not include a seedWealth
+// field (DEFAULTS satisfies Params and TypeScript rejects extra properties on
+// exact-match satisfies). SEED_WEALTH is imported directly by the store (Task 3)
+// and by Plan 02 selectors. It is NOT in the sourcing-completeness gate (which
+// only walks DEFAULTS — see sourcing.test.ts enumerateSourcedParams).
+//
+// SourceRecord fields are inlined here (not imported from SOURCES) because
+// importing SOURCES would create a circular dependency via defaults.ts already
+// importing from sources.ts above. The field values MUST match the scf2022
+// entry added to SOURCES so the two are citation-consistent.
+// ---------------------------------------------------------------------------
+
+/**
+ * UX seed default for the current wealth input (D-02).
+ *
+ * Based on US median family net worth from SCF 2022 ($192,900), rounded up
+ * to $200,000 as a representative starting point for the two-input experience.
+ * Not a DATA-04-scoped empirical model parameter — a UX default only.
+ */
+export const SEED_WEALTH: SourcedParam = Object.freeze({
+  value: 200_000,
+  basis: 'real' as const,
+  source: Object.freeze({
+    sourceName: 'Federal Reserve Board — Survey of Consumer Finances 2022 (SCF 2022)',
+    figureUsed: 'Median family net worth $192,900 (2022 survey dollars)',
+    basis: 'real' as const,
+    definition:
+      'US median family net worth; all families, 2022 survey; nominal 2022 dollars; ' +
+      'rounded up to $200,000 as a UX seed default per D-02',
+    yearVintage: '2022 survey data (published September 2023)',
+    retrievedDate: '2026-05-16',
+    note:
+      'UX default seed for current wealth entry; not a calibrated model parameter ' +
+      '(DATA-04 does not apply). SCF 2022 median family net worth = $192,900; ' +
+      'rounded up to $200,000 for the two-input start experience (D-02). ' +
+      'Source: federalreserve.gov/publications/files/scf23.pdf Table 2.',
+    url: 'https://www.federalreserve.gov/publications/files/scf23.pdf',
+  }),
+});
+
+// ---------------------------------------------------------------------------
+// INFLATION_RATE — fixed long-run CPI-U rate for nominal re-inflation (D-07)
+//
+// Exported separately from DEFAULTS because Params does not include an
+// inflationRate field. INFLATION_RATE is consumed by Plan 02 selectors
+// (selectReinflated) — NOT a user control in v1; v2 CONFIG-01 may expose it.
+//
+// SourceRecord fields are inlined here (not imported from SOURCES) to avoid
+// circular dependency — same pattern as SEED_WEALTH above. Values match the
+// blsCpiLongRun entry in SOURCES for citation consistency.
+// ---------------------------------------------------------------------------
+
+/**
+ * Fixed long-run CPI-U inflation rate for nominal re-inflation display (D-07).
+ *
+ * Long-run BLS CPI-U geometric mean ~2.9% (1926–2022); using 2.5% as a
+ * conservative post-1990-adjusted anchor. Not a user control in v1.
+ */
+export const INFLATION_RATE: SourcedParam = Object.freeze({
+  value: 0.025,
+  basis: 'nominal' as const,
+  source: Object.freeze({
+    sourceName: 'US Bureau of Labor Statistics — CPI-U long-run geometric mean (1926–2022)',
+    figureUsed:
+      'Long-run geometric mean annual CPI-U change approximately 2.9% (1926–2022) — ' +
+      'rounded to 2.5% as a conservative long-run anchor',
+    basis: 'nominal' as const,
+    definition:
+      'US Consumer Price Index for All Urban Consumers (CPI-U, all items); ' +
+      'long-run geometric average annual rate 1926–2022; ' +
+      'fixed display-only rate for nominal re-inflation selector (D-07); ' +
+      'not a user control (v2 CONFIG-01)',
+    yearVintage: '1926–2022 long-run average',
+    retrievedDate: '2026-05-16',
+    note:
+      'UX display default for nominal re-inflation (D-07 / selectReinflated); fixed for v1. ' +
+      'Long-run CPI-U geometric mean ~2.9% (1926–2022); using 2.5% as a slightly conservative ' +
+      'anchor that better reflects the post-1990 disinflationary period while remaining ' +
+      'well-cited. Source: BLS CPI data series CUUR0000SA0. ' +
+      'Money-illusion caption (D-09) cites this rate and source name.',
+    url: 'https://www.bls.gov/cpi/data.htm',
+  }),
+});
