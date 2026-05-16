@@ -56,6 +56,7 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 - **Phase 1 (Model Foundation) complete (2026-05-16):** pure, framework-free, deterministic projection engine — heterogeneous returns by percentile, asset-price-inflation drag, relative-position derivation, nominal/real basis invariant — proven by 44 numerical unit tests (tsc strict, 0 todo). Library only; no UI/IO. Requirements stay in Active (ship-to-validate semantics; engine not yet user-facing).
 - **Carried into Phase 2:** documented preconditions from review CR-01/CR-02 — calibration must keep Pareto alpha > 1 (top01/top1 < 10) and validate bisect bracket coverage before loading real empirical anchors (see `.planning/phases/01-model-foundation/01-HUMAN-UAT.md`).
 - **Phase 2 (Empirical Data & Parameter Calibration) complete (2026-05-16):** frozen, citation-annotated `DEFAULTS` (`src/data/defaults.ts` + `src/data/sources.ts`) — return-by-tier curve, back-solved `dragStrength` (McKinsey ~80% asset-inflation share), tier boundaries, horizon — every shipped value carries a complete `SourceRecord`, build-enforced by a sourcing-completeness Vitest gate. CR-01/CR-02 latent bugs hardened to fail loud. 58 tests, tsc strict. One open manual item: DATA-02 primary-source faithfulness cross-check (`02-HUMAN-UAT.md`). Requirements stay in Active (ship-to-validate; not yet user-facing).
+- **Phase 3 (Selectors, Visualization & Neutrality Style Guide) complete (2026-05-16):** the engine's output is made legible via three neutral chart types — time-series growth, multi-tier divergence overlay, relative-position trajectory — driven by memoized selectors (`src/state/selectors.ts`), with a shared linear/log toggle, hover/tap tooltips (year/wealth/rank/tier), a visible citation footer, and the NEUT-01 neutrality style guide artifact (`docs/NEUTRALITY-STYLE-GUIDE.md`) governing copy and palette. Full Vite 8 + React 19 + ECharts 6 + Tailwind v4 scaffold landed; vitest upgraded 3→4. 89 tests green, tsc strict, build clean. VIZ-01..06 + NEUT-01 verified by automation; 5 browser-only UAT items open (`03-HUMAN-UAT.md`). 3 advisory code-review warnings logged (`03-REVIEW.md`). Requirements stay in Active (ship-to-validate; full UI shell lands Phase 4).
 
 ## Context
 
@@ -112,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-16 after Phase 2 (Empirical Data & Parameter Calibration) completion*
+*Last updated: 2026-05-16 after Phase 3 (Selectors, Visualization & Neutrality Style Guide) completion*
