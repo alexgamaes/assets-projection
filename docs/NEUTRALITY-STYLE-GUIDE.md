@@ -104,3 +104,65 @@ These hues are chosen for categorical distinctness at equal perceptual weight. N
 Tier-threshold reference bands use slate-300 (`#CBD5E1`) at 30% opacity or less. These are neutral measurement lines, not alarm indicators.
 
 If the palette is extended in a future phase, every new hue must be evaluated against this rule: does the hue, in isolation or in combination with existing hues, suggest a directional value judgement? If so, substitute a more neutral option before shipping.
+
+---
+
+## Section 5 — D-09 Nominal Mode Caption Rule
+
+**Seeded:** 2026-05-16 (Phase 4, Plan 03)
+**Phase 5 gate:** NEUT-02 reviewer will verify the rendered caption in the app matches this template exactly.
+
+### Context
+
+When the user switches to nominal basis (via the Real/Nominal toggle), a fixed caption must appear adjacent to all money surfaces — Charts 1 and 2 and the Summary Readout. This caption informs the user that figures are not inflation-adjusted and cites the inflation rate assumed.
+
+### Required Caption Template
+
+The caption is implemented in `src/ui/SummaryReadout.tsx` via `formatMoneyIllusionCaption` (from `src/ui/summaryFormatters.ts`). The template (verbatim):
+
+> "These figures are not adjusted for inflation. They assume a fixed [X]% annual inflation rate ([source name]). Switch to Real for inflation-adjusted amounts."
+
+Where:
+- `[X]%` is derived from `INFLATION_RATE.value` (currently `0.025` → `2.5%`) — never a hardcoded literal
+- `[source name]` is `INFLATION_RATE.source.sourceName` — currently "US Bureau of Labor Statistics — CPI-U long-run geometric mean (1926–2022)"
+
+### Constraints
+
+- The rate value and source name must be read from the `INFLATION_RATE` constant imported from `src/data/defaults.ts`. If the rate is changed in a future phase, this section must be updated to match.
+- The caption must not appear when basis is `'real'` — `formatMoneyIllusionCaption` returns `''` in that case.
+- The caption must appear on all money surfaces simultaneously when nominal is active. It is not optional or collapsible.
+
+### Neutrality Test
+
+The caption is factual and descriptive. It states what the figures represent. "Switch to Real" is an informational pointer, not a value judgement implying nominal is wrong or inferior. The word "inflation" is used as a standard economic term, not as a rhetorical alarm.
+
+---
+
+## Section 6 — D-15 Rank-Delta Neutral Disclosure Rule
+
+**Seeded:** 2026-05-16 (Phase 4, Plan 03)
+**Phase 5 gate:** NEUT-02 reviewer will verify (a) the rank-delta stat never appears without the wealth-growth clause, and (b) the disclosure sentence is present whenever the rank delta is shown.
+
+### Context
+
+The Summary Readout shows a rank delta: the user's starting and ending percentile rank over the projection horizon (e.g., p75 → p71). This stat must never appear as a bare absolute, because it can be misread as a zero-sum finite-pie outcome — implying that some other party's gain caused the user's rank to fall. All wealth tiers compound simultaneously; rank movement is a consequence of heterogeneous return rates, not of wealth extraction.
+
+### Required Pairing (D-14)
+
+The rank delta must always be immediately adjacent to the same-horizon wealth growth. This is implemented in `src/ui/summaryFormatters.ts` via `formatRankDelta`. The template:
+
+> "Distribution position: p[NN] → p[MM], while real wealth grew [G]×."
+
+The `while real wealth grew [G]×` clause is mandatory. It is part of the same sentence, not a separate element, and it must refer to the real growth multiple regardless of the active basis setting.
+
+### Required Disclosure Sentence (D-15)
+
+Immediately after the rank delta, the following disclosure sentence must always be visible. It is implemented in `src/ui/SummaryReadout.tsx` (Body 16/400):
+
+> "Rank can move down while real wealth still grows — every tier's wealth increases over this horizon. See the wealth-by-tier chart for absolute amounts."
+
+This sentence is not collapsible, tooltip-only, or hidden behind any interaction. It must appear in the DOM as a `<p>` element whenever the rank delta is shown.
+
+### Neutrality Test
+
+The disclosure is mechanistic and non-editorial. It does not assign blame or virtue to any tier. It states what the model shows: parallel compounding of all tiers can produce rank movement even when absolute wealth grows for the user. The phrase "real wealth still grows" is technically precise — it refers to the real-basis wealth trajectory, not a normative claim.
