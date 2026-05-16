@@ -89,8 +89,19 @@ Plans:
   4. A multi-tier comparison overlay plots the user vs. median/top 1%/top 0.1% in one frame, and a separate relative-position trajectory shows the user's wealth share/rank changing over the horizon
   5. Visible source citations (footer minimum) trace displayed defaults to named research, and a neutrality style guide artifact (copy + palette rules, no value-laden red/green) exists before any user-facing copy is finalized
 
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Scaffold: replace package.json, vite.config.ts, tsconfig JSX, Zustand store, selector test stubs
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Selector layer (VIZ-01/02/03) + TimeSeriesChart + LogLinearToggle + HarnessPage (Chart 1 visible)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-03-PLAN.md — Selectors VIZ-04/05/06 + DivergenceChart + RelativePosChart + CitationFooter + complete HarnessPage + neutrality style guide
 
 ### Phase 4: UI Shell & Minimal Entry
 
@@ -134,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
-| 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
+| 3. Selectors, Visualization & Neutrality Style Guide | 0/3 | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
