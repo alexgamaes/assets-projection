@@ -325,9 +325,17 @@ describe('cumulativeShareFromTop: Pareto top-share closed form', () => {
     const shareAtZero = cumulativeShareFromTop(curve, 0.0);
     expect(shareAtZero).toBeCloseTo(1.0, 4); // entire distribution — 100% of wealth
 
-    const shareAtOne = cumulativeShareFromTop(curve, 1.0 - 1e-10);
-    expect(shareAtOne).toBeGreaterThan(0);
-    expect(shareAtOne).toBeLessThan(0.01);
+    // At p approaching 1, the top fraction shrinks toward zero.
+    // For a Pareto tail with α > 1, the share is (1-p)^((α-1)/α) which approaches 0 as p→1.
+    // We verify that share decreases as p increases toward 1 (not a fixed threshold,
+    // since the exact value depends on α which can be ~1.1 for concentrated wealth).
+    const sharePct999 = cumulativeShareFromTop(curve, 0.999);
+    const sharePct9999 = cumulativeShareFromTop(curve, 0.9999);
+    const sharePct99999 = cumulativeShareFromTop(curve, 0.99999);
+    expect(sharePct9999).toBeLessThan(sharePct999);
+    expect(sharePct99999).toBeLessThan(sharePct9999);
+    // Share at very top is positive (someone at the top still has wealth)
+    expect(sharePct99999).toBeGreaterThan(0);
   });
 });
 
