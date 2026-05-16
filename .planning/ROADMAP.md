@@ -117,8 +117,19 @@ Plans:
   4. A summary readout shows ending wealth, growth multiple, and CAGR
   5. The layout is usable across mobile and desktop, with chart interactions degrading gracefully to touch
 
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — Wave-0 test stubs + cited seed defaults (seedWealth, inflationRate) + Zustand store actions (setInputs/setHorizon/setBasis)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 04-02-PLAN.md — selectReinflated + selectSummary selectors + LogSliderInput, HorizonSlider, BasisToggle, SummaryReadout UI primitives
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
 
 ### Phase 5: Neutrality Review & Release Readiness
 
