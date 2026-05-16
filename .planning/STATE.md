@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-15)
 Phase: 5
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-16
+Last activity: 2026-05-16 - Completed quick task 260516-lpb: widen user wealth line + "You" label
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -76,6 +76,12 @@ None yet.
 - [Phase 2]: High epistemic risk — requires primary-source reading (Fagereng, Bach, JST, McKinsey) at table/definition level; drag-strength formula has no off-the-shelf derivation. Flag for `/gsd:plan-phase --research-phase 2`.
 - [Phase 3]: Relative-position chart design has no mainstream precedent; neutrality style guide needs deliberate design. Flag for `/gsd:plan-phase --research-phase 3` if a spike is needed.
 - [Cross-cutting]: PROJECT.md still contains the imprecise "~18pp gap" shorthand — must be corrected before Phase 2 closes.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260516-lpb | Widen user wealth line to 3.5px + add neutral "You" end-label across all 3 chart selectors (D-03-safe, no hue change) | 2026-05-16 | 070728b | [260516-lpb-make-the-users-wealth-line-easier-to-rea](./quick/260516-lpb-make-the-users-wealth-line-easier-to-rea/) |
 
 ## Deferred Items
 
