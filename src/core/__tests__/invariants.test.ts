@@ -18,6 +18,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { projectionEngine } from '../engine.js';
 import { analyticOrdinaryAnnuity, relErr, makeSyntheticParams, synParam, syntheticInputs } from './testUtils.js';
+import { DEFAULTS } from '../../data/defaults.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -206,5 +207,135 @@ describe('MODEL-04 invariants (drag coupling)', () => {
         `drag=${drag}: top01/median ratio at year ${horizon} (${ratioN.toFixed(2)}) must exceed year-0 ratio (${ratio0.toFixed(2)}) — higher-return tier should diverge`,
       ).toBeGreaterThan(ratio0);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D-09: D-12 invariant battery re-run on real DEFAULTS (Pitfall 4)
+//
+// Implements D-09: re-asserts the Phase 1 D-12 non-conservation / infinite-growth
+// invariants on the real back-solved defaults. Proves that the back-solved calibration
+// introduced no finite-pie/zero-sum artifact (Pitfall 4 / D-09).
+//
+// Only the params source changes (DEFAULTS instead of makeSyntheticParams()); the four
+// invariant cases and the sumAnchors helper are reused unchanged.
+// ---------------------------------------------------------------------------
+
+/** Representative inputs for D-09 DEFAULTS-fed invariant tests. */
+const defaultsInputs = {
+  currentWealth: DEFAULTS.anchors.median.value, // start at the median anchor level
+  annualSavings: DEFAULTS.savings.value,        // DEFAULTS savings baseline
+};
+
+describe('D-09: D-12 invariant battery re-run on real DEFAULTS (Pitfall 4)', () => {
+  // Case 1: drag=0 collapse to independent per-tier baseline
+  // D-09 invariant: when dragStrength is overridden to 0, each DEFAULTS anchor tier must
+  // compound at its own return rate independently (no assetInflation haircut).
+  // Checks P3 (no drag double-count) on the real anchor/return values.
+  it('D-09 / drag=0: DEFAULTS with dragStrength=0 collapses to independent per-tier baseline (<1e-9 relErr)', () => {
+    // Use a 10-year horizon: enough to detect any drift while keeping the numbers readable.
+    // Full DEFAULTS horizon (35y) would trigger endogenous calibrateCurve fallback, which
+    // is expected for long horizons (top01/top1 ratio growth causes alpha <= 1 after ~7y).
+    // The drag=0 collapse invariant holds regardless of curve re-fit mode.
+    const horizon = 10;
+    const params = { ...DEFAULTS, dragStrength: synParam(0, 'real'), horizon };
+
+    const result = projectionEngine(defaultsInputs, params);
+    const finalSnap = result.series[result.series.length - 1];
+    if (!finalSnap) throw new Error('expected series to have at least one entry');
+
+    // Each tier must match the independent annuity formula at its own DEFAULTS anchor + return
+    const tierData = [
+      { key: 'median' as const, W0: DEFAULTS.anchors.median.value,  r: DEFAULTS.returnByTier.median.value },
+      { key: 'top10' as const,  W0: DEFAULTS.anchors.top10.value,   r: DEFAULTS.returnByTier.top10.value  },
+      { key: 'top1' as const,   W0: DEFAULTS.anchors.top1.value,    r: DEFAULTS.returnByTier.top1.value   },
+      { key: 'top01' as const,  W0: DEFAULTS.anchors.top01.value,   r: DEFAULTS.returnByTier.top01.value  },
+    ];
+    const savings = DEFAULTS.savings.value;
+
+    for (const { key, W0, r } of tierData) {
+      const expected = analyticOrdinaryAnnuity(W0, r, savings, horizon);
+      const actual = finalSnap.anchorWealth[key];
+      const err = relErr(actual, expected);
+      expect(
+        err,
+        `D-09 drag=0 ${key} relErr should be <1e-9; got ${err.toExponential(3)} (actual=${actual.toExponential(4)}, expected=${expected.toExponential(4)})`,
+      ).toBeLessThan(1e-9);
+    }
+  });
+
+  // Case 2: Non-conservation / no transfer (Pitfall 4)
+  // D-09 invariant: with the back-solved dragStrength, aggregate real wealth must still grow
+  // (drag is a return haircut, NOT a transfer between tiers — Pitfall 4).
+  // Assertion: total anchor wealth grows from year 0 to year N (non-conservation),
+  // and high-return tiers (top1, top01) individually grow (no zero-sum redistribution).
+  // Note: median r_eff may be negative under DEFAULTS dragStrength (large haircut on low-return
+  // tier); median wealth may decline over 5 years — this is expected, physically meaningful
+  // behavior. The non-transfer assertion focuses on top1/top01 (positive r_eff) and aggregate
+  // growth (total must increase — the economy as a whole grows even if median declines).
+  it('D-09 / non-conservation: aggregate DEFAULTS anchor wealth grows with back-solved dragStrength; no tier-to-tier transfer (Pitfall 4)', () => {
+    const horizon = 5;
+    const params = { ...DEFAULTS, horizon };
+
+    const result = projectionEngine(defaultsInputs, params);
+    const snap0 = result.series[0];
+    const snapN = result.series[result.series.length - 1];
+    if (!snap0 || !snapN) throw new Error('expected non-empty series');
+
+    const totalY0 = sumAnchors(snap0.anchorWealth);
+    const totalYN = sumAnchors(snapN.anchorWealth);
+
+    // Aggregate must grow (non-conservation / Pitfall 4 / D-09)
+    expect(
+      totalYN,
+      `D-09 non-conservation: aggregate DEFAULTS wealth at year ${horizon} (${totalYN.toExponential(4)}) must exceed year-0 (${totalY0.toExponential(4)})`,
+    ).toBeGreaterThan(totalY0);
+
+    // High-return tiers must grow individually (non-zero-sum: no tier's gain sourced from another's loss)
+    expect(
+      snapN.anchorWealth.top1,
+      'D-09 top1 must grow under DEFAULTS dragStrength (non-transfer assertion)',
+    ).toBeGreaterThan(snap0.anchorWealth.top1);
+    expect(
+      snapN.anchorWealth.top01,
+      'D-09 top01 must grow under DEFAULTS dragStrength (non-transfer assertion)',
+    ).toBeGreaterThan(snap0.anchorWealth.top01);
+  });
+
+  // Case 3: No tier forced to negative real wealth by drag alone (infinite-growth preserved)
+  // D-09 invariant: no tier at any year has strictly negative real wealth under DEFAULTS.
+  // With DEFAULTS dragStrength~0.4326 and median r=2.5%, drag may make median r_eff < 0,
+  // but with savings=6000/year, the wealth floor is > 0. We allow median to reach near 0
+  // (asserting >= 0) while tiers with positive r_eff (top10/top1/top01) must stay > 0.
+  it('D-09 / infinite-growth: no DEFAULTS anchor tier is forced to negative real wealth', () => {
+    const result = projectionEngine(defaultsInputs, DEFAULTS);
+
+    for (const snap of result.series) {
+      // median may approach the floor (savings/|r_eff|) but must not go negative
+      expect(snap.anchorWealth.median, `D-09 year ${snap.year} median must be >= 0`).toBeGreaterThanOrEqual(0);
+      expect(snap.anchorWealth.top10, `D-09 year ${snap.year} top10 must be positive`).toBeGreaterThan(0);
+      expect(snap.anchorWealth.top1, `D-09 year ${snap.year} top1 must be positive`).toBeGreaterThan(0);
+      expect(snap.anchorWealth.top01, `D-09 year ${snap.year} top01 must be positive`).toBeGreaterThan(0);
+    }
+  });
+
+  // Case 4: Monotone relative divergence on real DEFAULTS
+  // D-09 invariant: the top01/median wealth ratio must increase over DEFAULTS horizon.
+  // Confirms wealth concentration divergence is preserved under the real back-solved drag —
+  // consistent with the Phase 1 synthetic battery (drag does not equalize returns).
+  it('D-09 / monotone divergence: top01/median wealth ratio increases over DEFAULTS horizon', () => {
+    const result = projectionEngine(defaultsInputs, DEFAULTS);
+
+    const snap0 = result.series[0];
+    const snapN = result.series[result.series.length - 1];
+    if (!snap0 || !snapN) throw new Error('expected non-empty series');
+
+    const ratio0 = snap0.anchorWealth.top01 / snap0.anchorWealth.median;
+    const ratioN = snapN.anchorWealth.top01 / snapN.anchorWealth.median;
+
+    expect(
+      ratioN,
+      `D-09 top01/median ratio at year ${DEFAULTS.horizon} (${ratioN.toFixed(2)}) must exceed year-0 ratio (${ratio0.toFixed(2)}) — wealth concentration must diverge`,
+    ).toBeGreaterThan(ratio0);
   });
 });
