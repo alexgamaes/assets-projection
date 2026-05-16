@@ -9,8 +9,19 @@
  *   - dynamicTopSetPercentile inversion (D-03)
  *   - returnAtPercentile interpolation (MODEL-02: strictly monotone)
  *   - C0/C1 stitch continuity
+ *   - CR-01/CR-02 fail-loud guards (D-01/D-02 — Phase 2 hardening)
  *
  * Tolerance: DIST_TOL = 1e-6 (RESEARCH Open Question 2 resolution — two-tolerance scheme)
+ *
+ * CR-01 bisect guard: bisect() must throw (not silently return garbage) when the root
+ *   is not bracketed by the interval [lo, hi], or when a function endpoint is non-finite.
+ *   Exercised via calibrateCurve() with anchors that force the stitch root outside
+ *   the [0.9001, 0.9999] bracket, and via dynamicTopSetPercentile with a near-uniform
+ *   distribution.
+ *
+ * CR-02 alpha>1 guard: calibrateCurve() must throw (not silently produce negative
+ *   totalWealth) when top01/top1 >= 10 (Pareto alpha <= 1).
+ *   Hand-computed fixture: top1=2_000_000, top01=30_000_000 → ratio=15 → alpha≈0.677 ≤ 1.
  *
  * Hand-computed Pareto fixture:
  *   Pure Pareto(α=2, xm=1):
@@ -117,42 +128,45 @@ describe('erf/Φ helper (Abramowitz-Stegun 7.1.26)', () => {
   // We import it from distribution.ts if exported; otherwise test via lognormal CDF.
 
   it('lognormal CDF evaluated at known Φ table values matches standard normal CDF within DIST_TOL', () => {
-    // Use a lognormal body calibrated with μ=0, σ=1 (forced via known-μ-σ anchors).
-    // LogNormal(μ=0, σ=1): CDF(w) = Φ(ln w)
-    // Anchors that correspond to LogNormal(0,1) quantiles:
-    //   p50 (median): Q(0.5) = exp(μ + σ·Φ⁻¹(0.5)) = exp(0) = 1
-    //   p90: Q(0.9) = exp(Φ⁻¹(0.9)) = exp(1.2816) ≈ 3.5966
-    //   p99: Q(0.99) = exp(Φ⁻¹(0.99)) = exp(2.3263) ≈ 10.237
-    //   p99.9: Q(0.999) = exp(Φ⁻¹(0.999)) = exp(3.0902) ≈ 21.977
+    // Use a lognormal body calibrated with μ=ln(50_000), σ=1 (approximated via SYNTH_ANCHORS).
+    // For LogNormal(μ, σ): CDF(w) = Φ((ln w − μ)/σ)
     //
-    // With μ=0, σ=1: cdf(curve, w) = Φ(ln w) for w in the lognormal body.
-    // We pick w = exp(z) so cdf(curve, exp(z)) = Φ(z).
+    // SYNTH_ANCHORS has:
+    //   μ = ln(50_000) ≈ 10.8198, σ ≈ 1.3979 (derived from top10 anchor)
     //
-    // We test the Φ values by evaluating cdf at wealth = exp(z) for z ∈ PHI_TABLE,
-    // only for z values where exp(z) < stitch quantile (body region).
-    const muAnchors = makeAnchors(
-      Math.exp(0),          // p50 median: exactly exp(0)=1 for LogNormal(0,1)
-      Math.exp(1.2815516),  // p90 (Q(0.9) of LN(0,1))
-      Math.exp(2.3263479),  // p99
-      Math.exp(3.0902323),  // p99.9
-    );
-    const curve = calibrateCurve(muAnchors);
+    // To test the Φ helper via the lognormal CDF, we evaluate cdf(curve, w) for
+    // w = exp(μ + σ·z) and expect Φ(z). We test representative z values in PHI_TABLE
+    // that correspond to body-region wealth (below the stitch percentile near p99).
+    //
+    // NOTE: Anchors derived directly from LogNormal(0,1) quantiles (tiny wealth ~1–22)
+    // produce a stitch equation with no root in the [0.9001,0.9999] bracket — the CR-01
+    // guard correctly rejects them (revealed by Phase 2 hardening). Use SYNTH_ANCHORS
+    // (which calibrate correctly) and derive expected Φ values from the actual μ, σ.
+    const curve = calibrateCurve(SYNTH_ANCHORS);
+    const mu = Math.log(50_000); // actual mu for SYNTH_ANCHORS
+    // sigma derived from: Q(0.9) = exp(mu + sigma * Phi^-1(0.9))
+    //   => sigma = (ln(300_000) - mu) / Phi^-1(0.9)
+    //   Phi^-1(0.9) ≈ 1.2815516
+    const sigma = (Math.log(300_000) - mu) / 1.2815516; // ≈ 1.3979
 
-    // For each z where exp(z) is in the body (before the stitch percentile, i.e. before p99.9),
-    // test that cdf(curve, exp(z)) ≈ Φ(z).
+    // For z values in PHI_TABLE: w = exp(mu + sigma * z) → cdf(curve, w) ≈ Phi(z)
+    // Only test where w is strictly in the lognormal body (well below stitch quantile).
+    // Near or above the stitch, the Pareto tail takes over and the CDF deviates from
+    // the pure lognormal formula — that deviation is expected (C0/C1 continuity is tested
+    // separately in Suite 7). Use 90th-percentile wealth as the body upper bound.
+    const stitchBody = quantile(curve, 0.9); // conservative body upper bound
     const bodyTests = PHI_TABLE.filter(({ z }) => {
-      // exp(z) should be in body (below stitch quantile which is near p99)
-      const w = Math.exp(z);
-      return w < quantile(curve, 0.99);
+      const w = Math.exp(mu + sigma * z);
+      return w > 0 && w < stitchBody;
     });
 
     expect(bodyTests.length).toBeGreaterThan(0); // sanity
     for (const { z, phi } of bodyTests) {
-      const w = Math.exp(z);
+      const w = Math.exp(mu + sigma * z);
       const actual = cdf(curve, w);
       expect(
         Math.abs(actual - phi),
-        `cdf(curve, exp(${z})) = ${actual} should ≈ Φ(${z}) = ${phi}`
+        `cdf(curve, exp(μ + σ·${z})) = ${actual} should ≈ Φ(${z}) = ${phi}`
       ).toBeLessThan(DIST_TOL);
     }
   });
@@ -360,8 +374,15 @@ describe('dynamicTopSetPercentile: D-03 bisection inversion', () => {
   it('D-03: more-concentrated anchors push p* further toward the top (p* increases)', () => {
     // Less concentrated distribution
     const lessConc = makeAnchors(50_000, 150_000, 500_000, 2_000_000);
-    // More concentrated distribution (larger ratio between top01 and median)
-    const moreConc = makeAnchors(50_000, 500_000, 5_000_000, 80_000_000);
+    // More concentrated distribution (larger ratio between top01 and median).
+    // NOTE: top01/top1 must stay < 10 (alpha > 1 required by CR-02 guard), and anchors
+    // must produce a stitch root in [0.9001, 0.9999] (CR-01 bracket check).
+    //   top01/top1 = 150_000_000/20_000_000 = 7.5 → alpha ≈ 1.143 > 1 ✓
+    //   sigma ≈ (ln(2M) - ln(50k)) / Φ⁻¹(0.9) ≈ 2.93 (very wide body spread)
+    //   Stitch root is bracketed: f(0.9001) < 0, f(0.9999) > 0 ✓
+    //   (original 80_000_000 gave ratio=16 → alpha≈0.75 ≤ 1, silently poisoning the curve;
+    //    the CR-02 guard now correctly rejects it — revealed by Phase 2 hardening)
+    const moreConc = makeAnchors(50_000, 2_000_000, 20_000_000, 150_000_000);
 
     const pLess = dynamicTopSetPercentile(calibrateCurve(lessConc));
     const pMore = dynamicTopSetPercentile(calibrateCurve(moreConc));
@@ -480,30 +501,78 @@ describe('stitch continuity at body/tail boundary', () => {
 // Suite 8: lognormal partial-expectation cross-check
 // ---------------------------------------------------------------------------
 describe('lognormal partial-expectation identity', () => {
-  it('E[X·1{X≤w}] via cdf matches textbook identity for LogNormal(0,1)', () => {
-    // For LogNormal(μ=0, σ=1):
-    //   E[X] = exp(0.5) ≈ 1.64872
-    //   E[X·1{X≤e}] = exp(0.5)·Φ(0) = exp(0.5)·0.5 ≈ 0.82436
-    //   Equivalently: at w=e (=exp(1)), cdf(curve, e) = Φ(ln(e) − 0)/1 = Φ(1) ≈ 0.84134
+  it('E[X·1{X≤w}] via cdf matches textbook identity for LogNormal(μ, σ)', () => {
+    // For LogNormal(μ, σ): CDF(w) = Φ((ln w − μ)/σ)
+    //   Specifically: cdf(curve, exp(μ + σ·z)) = Φ(z)  for body-region w
     //
-    // We verify the calibrated curve at the known anchor quantiles has correct CDF values.
+    // SYNTH_ANCHORS: μ = ln(50_000) ≈ 10.8198, σ ≈ 1.3979
+    //
+    // We verify the calibrated curve at a known body-region wealth:
+    //   w = exp(μ + σ·1) → cdf(curve, w) ≈ Φ(1) ≈ 0.84134
     // This exercises the lognormal partial-expectation path used by cumulativeShareFromTop.
-    const muAnchors = makeAnchors(
-      Math.exp(0),          // p50 = exp(Φ⁻¹(0.5)·1 + 0) = 1
-      Math.exp(1.2815516),  // p90 of LN(0,1)
-      Math.exp(2.3263479),  // p99
-      Math.exp(3.0902323),  // p99.9
-    );
-    const curve = calibrateCurve(muAnchors);
+    //
+    // NOTE: Anchors from LogNormal(0,1) (tiny wealth ~1–22) produce a stitch equation
+    // with no root in [0.9001,0.9999]; the CR-01 guard now correctly rejects them
+    // (revealed by Phase 2 hardening). We use SYNTH_ANCHORS instead.
+    const curve = calibrateCurve(SYNTH_ANCHORS);
+    const mu = Math.log(50_000);
+    const sigma = (Math.log(300_000) - mu) / 1.2815516; // ≈ 1.3979
 
-    // At w=exp(1)=e: cdf should ≈ Φ(1) ≈ 0.84134
-    const w = Math.exp(1);
+    // w = exp(μ + σ·1) is in the lognormal body (below p99 stitch)
+    const w = Math.exp(mu + sigma * 1);
     const actual = cdf(curve, w);
     const expected = 0.8413447460685429; // Φ(1) from PHI_TABLE
 
     expect(
       Math.abs(actual - expected),
-      `cdf at w=e: got ${actual}, expected Φ(1)=${expected}`
+      `cdf at w=exp(μ+σ): got ${actual}, expected Φ(1)=${expected}`
     ).toBeLessThan(DIST_TOL);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Suite 9: CR-01/CR-02 fail-loud guards (D-01/D-02)
+// ---------------------------------------------------------------------------
+describe('CR-01/CR-02 fail-loud guards (D-01/D-02)', () => {
+  // ---------------------------------------------------------------------------
+  // CR-02: calibrateCurve throws when Pareto alpha ≤ 1 (top01/top1 >= 10)
+  // ---------------------------------------------------------------------------
+  it('CR-02: calibrateCurve throws /alpha=.*≤ 1/ when top01/top1 >= 10 (alpha <= 1)', () => {
+    // Hand-computed fixture:
+    //   top1 = 2_000_000, top01 = 30_000_000
+    //   ratio = top01/top1 = 15
+    //   alpha = ln(10) / ln(15) ≈ 2.302585 / 2.708050 ≈ 0.8503 ≤ 1
+    // This is a realistic concentration level for extreme top-heavy distributions.
+    const badAnchors = makeAnchors(50_000, 300_000, 2_000_000, 30_000_000);
+    expect(() => calibrateCurve(badAnchors)).toThrow(/alpha=.*≤ 1/);
+  });
+
+  // ---------------------------------------------------------------------------
+  // CR-01: bisect throws when root is not bracketed
+  // ---------------------------------------------------------------------------
+  it('CR-01: dynamicTopSetPercentile throws /root not bracketed/ for near-uniform anchors', () => {
+    // For a very low-concentration distribution where the top set holding 50% of
+    // wealth requires a percentile above 0.9999 (outside bisect's [0.0001,0.9999] bracket),
+    // the bisect function must throw instead of silently returning a wrong root.
+    //
+    // Hand-computed fixture:
+    //   median = 900_000, top10 = 1_000_000, top1 = 1_100_000, top01 = 1_200_000
+    //   Very uniform — top 0.1% barely richer than median.
+    //   The cumulativeShareFromTop function will not reach 0.5 within [0.0001, 0.9999]
+    //   because in a near-uniform distribution the top 0.01% holds < 50% of wealth.
+    //   This forces bisect to encounter f(lo) and f(hi) with the same sign.
+    const nearUniformAnchors = makeAnchors(900_000, 1_000_000, 1_100_000, 1_200_000);
+    expect(() => dynamicTopSetPercentile(calibrateCurve(nearUniformAnchors))).toThrow(
+      /root not bracketed/
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Positive control: valid anchors do NOT throw
+  // ---------------------------------------------------------------------------
+  it('positive control: calibrateCurve with valid anchors (alpha > 1) does not throw', () => {
+    // Standard synthetic anchors: top01/top1 = 15_000_000/2_000_000 = 7.5 < 10
+    // alpha = ln(10)/ln(7.5) ≈ 1.1394 > 1 — valid domain
+    expect(() => calibrateCurve(SYNTH_ANCHORS)).not.toThrow();
   });
 });

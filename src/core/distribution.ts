@@ -25,6 +25,15 @@
  *   Zero framework/DOM/fetch/randomness/timestamps — pure numeric module.
  *   Import-boundary test (invariants.test.ts MODEL-01) stays green by design.
  *
+ * Phase 2 hardening (D-01 / D-02):
+ *   CR-01 — bisect() now throws a diagnostic Error (no silent clamp) when the root is not
+ *            bracketed by [lo, hi] or when a function endpoint is non-finite.
+ *   CR-02 — calibrateCurve() now throws a diagnostic Error naming the offending alpha when
+ *            the Pareto tail index alpha ≤ 1 (i.e. top01/top1 >= 10), guarding the
+ *            paretoConditionalMean division-by-(alpha-1) from producing negative totalWealth.
+ *   Both guards follow the assertReal fail-loud shape (src/core/types.ts:36-40): throw a
+ *   descriptive Error naming value + violated bound + parameter. No silent clamping.
+ *
  * @module distribution
  */
 
@@ -291,6 +300,20 @@ export function calibrateCurve(anchors: Anchors): Curve {
   // → α = ln(10) / ln(top01/top1)
   const alpha = Math.log(10) / Math.log(top01Wealth / top1Wealth);
 
+  // CR-02 guard (D-01/D-02): Pareto tail index must be > 1 for the conditional mean to
+  // be finite and positive. When alpha ≤ 1, paretoConditionalMean = alpha*w/(alpha-1)
+  // produces a negative or infinite result (alpha-1 ≤ 0), silently poisoning every
+  // downstream share/percentile computation. alpha ≤ 1 occurs when top01/top1 >= 10.
+  // Fail loud (assertReal shape — no silent clamp). See 01-REVIEW.md §CR-02.
+  if (!(alpha > 1)) {
+    throw new Error(
+      `calibrateCurve: Pareto tail index alpha=${alpha} ≤ 1 ` +
+        `(top01/top1=${top01Wealth / top1Wealth}); ` +
+        `mean wealth is undefined for alpha ≤ 1. ` +
+        `Constrain anchors so top01/top1 < 10.`,
+    );
+  }
+
   // Step 4: Find stitch quantile qs such that the Pareto tail (starting at Q_ln(qs))
   // exactly passes through the top1 anchor at p=0.99.
   //
@@ -495,10 +518,22 @@ export function cumulativeShareFromTop(curve: Curve, p: number): number {
 export function dynamicTopSetPercentile(curve: Curve): number {
   // cumulativeShareFromTop is strictly decreasing in p.
   // We want share(p*) = 0.5 → bisect for the zero of (share - 0.5).
+  const lo = 0.0001;
+  const hi = 0.9999;
+  const fLo = cumulativeShareFromTop(curve, lo) - 0.5;
+  const fHi = cumulativeShareFromTop(curve, hi) - 0.5;
+
+  // WR-01 boundary case: if the top (1−hi) fraction already holds > 50% of wealth
+  // (fHi > 0), extreme concentration places the 50%-share boundary above the bracket.
+  // Return hi as a defined boundary: the top set is the maximally concentrated group.
+  // This is a deliberate modeling clamp with a named reason, not a silent fallback.
+  if (fHi > 0) return hi;
+
+  // Standard case: the root is bracketed → bisect to full precision.
   return bisect(
     (p) => cumulativeShareFromTop(curve, p) - 0.5,
-    0.0001,
-    0.9999,
+    lo,
+    hi,
     100,
     1e-12,
   );
@@ -591,6 +626,22 @@ function bisect(
   let a = lo;
   let b = hi;
   const fa = f(a);
+  const fb = f(b);
+
+  // CR-01 guards (D-01/D-02): fail loud instead of silently returning a wrong root.
+  // Order: finite check first (NaN from f propagates as non-finite → catches CR-02 cascade);
+  // then exact-zero shortcuts; then sign check (brackets guarantee a root exists).
+  // See 01-REVIEW.md §CR-01 for the exact bug shape (fa*fb > 0 → junk root, no error).
+  if (!Number.isFinite(fa) || !Number.isFinite(fb)) {
+    throw new Error(`bisect: non-finite endpoint f(${lo})=${fa}, f(${hi})=${fb}`);
+  }
+  if (fa === 0) return a;
+  if (fb === 0) return b;
+  if (fa * fb > 0) {
+    throw new Error(
+      `bisect: root not bracketed in [${lo}, ${hi}] (f(lo)=${fa}, f(hi)=${fb})`,
+    );
+  }
 
   for (let i = 0; i < maxIter; i++) {
     if (b - a < tol) break;

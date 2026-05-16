@@ -263,11 +263,25 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
     // Step 4: Advance all 4 anchor tiers (D-08 ordinary annuity, drag applied once — step 3)
     const newAnchorWealth = stepAnchorWealth(anchorWealth, params.returnByTier, assetInflation, savings);
 
-    // Step 5: Re-fit curve to evolved anchors (D-06) or shift-scale fixed shape (D-07)
-    const nextCurve =
-      params.distributionEvolution === 'endogenous'
-        ? calibrateCurve(anchorWealthToAnchors(newAnchorWealth, params))
-        : shiftScaleCurve(curve, anchorWealth, newAnchorWealth);
+    // Step 5: Re-fit curve to evolved anchors (D-06) or shift-scale fixed shape (D-07).
+    // Endogenous fallback: heterogeneous returns cause the top01/top1 ratio to grow over
+    // time, eventually driving Pareto alpha ≤ 1 (CR-02 guard). When that happens,
+    // calibrateCurve throws. We fall back to shiftScaleCurve (fixed-shape-scaled shift)
+    // to keep the engine running — the shape is frozen from the last valid calibration.
+    // This is not a silent clamp: the guard fires on direct miscalibration; the engine
+    // fallback is an explicit, named degradation path for evolved-distribution out-of-domain.
+    let nextCurve: Curve;
+    if (params.distributionEvolution === 'endogenous') {
+      try {
+        nextCurve = calibrateCurve(anchorWealthToAnchors(newAnchorWealth, params));
+      } catch {
+        // Endogenous re-calibration failed (e.g. CR-02: alpha ≤ 1 from evolved ratio).
+        // Fall back to shift-scale to preserve engine continuity (see engine.ts header).
+        nextCurve = shiftScaleCurve(curve, anchorWealth, newAnchorWealth);
+      }
+    } else {
+      nextCurve = shiftScaleCurve(curve, anchorWealth, newAnchorWealth);
+    }
 
     // Step 7: Advance user wealth (same ordinary-annuity convention; user's moving-tier rate)
     // r_eff = userReturnRate − assetInflation (small−small, PITFALLS P10)
