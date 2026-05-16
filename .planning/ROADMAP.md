@@ -31,7 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A unit test confirms drag=0 collapses to independent per-tier baseline, aggregate real wealth can grow unbounded, and no tier is forced to negative real wealth by drag alone (non-conservation, no transfer function)
   4. Every parameter object carries an explicit nominal/real basis field; a test fails if a value of one basis is consumed where the other is expected
   5. Engine output matches a closed-form compounding reference within a documented relative-error tolerance over the maximum horizon
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold + branded basis invariant + Wave-0 test skeleton
+- [ ] 01-02-PLAN.md — Lognormal+Pareto distribution curve with closed-form top-share (spike)
+- [ ] 01-03-PLAN.md — Engine vertical slice: tiers + scalar drag + loop + golden master
+- [ ] 01-04-PLAN.md — D-12 invariant battery + hand-derived multi-tier fixture
 
 ### Phase 2: Empirical Data & Parameter Calibration
 **Goal**: A frozen, citation-annotated default parameter set (return-by-tier curve, drag strength, tier boundaries, horizon default) traced to corrected primary literature, with a build check that refuses any parameter lacking a complete source record.
@@ -94,7 +99,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Model Foundation | 0/TBD | Not started | - |
+| 1. Model Foundation | 0/4 | Planned | - |
 | 2. Empirical Data & Parameter Calibration | 0/TBD | Not started | - |
 | 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
