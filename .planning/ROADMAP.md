@@ -132,7 +132,7 @@ Plans:
 
 - [x] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
 
-### Phase 04.1: Tier Share-of-Economy Visualization (INSERTED)
+### Phase 4.1: Tier Share-of-Economy Visualization (INSERTED)
 
 **Goal**: Make wealth concentration legible as a *share of the whole*: each percentile tier (median p50, top10 p90, top1 p99, top01 p99.9) and the user are shown as a fraction of total distribution wealth, both as a trajectory over the horizon and as a final-year snapshot — so the reader sees not just that tiers diverge in level but how the composition of total wealth shifts over time. Inserted before Neutrality Review so Phase 5 reviews this chart's copy and palette.
 **Mode:** mvp
