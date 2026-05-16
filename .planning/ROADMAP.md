@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Model Foundation** - Pure, deterministic, unit-tested projection engine with the nominal/real basis and non-conservation invariants baked in (completed 2026-05-16)
 - [x] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature (completed 2026-05-16)
-- [ ] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact
+- [x] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact (completed 2026-05-16)
 - [ ] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout
 - [ ] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide
 
@@ -101,7 +101,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03-PLAN.md — Selectors VIZ-04/05/06 + DivergenceChart + RelativePosChart + CitationFooter + complete HarnessPage + neutrality style guide
+- [x] 03-03-PLAN.md — Selectors VIZ-04/05/06 + DivergenceChart + RelativePosChart + CitationFooter + complete HarnessPage + neutrality style guide
 
 ### Phase 4: UI Shell & Minimal Entry
 
@@ -145,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
-| 3. Selectors, Visualization & Neutrality Style Guide | 2/3 | In Progress|  |
+| 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
