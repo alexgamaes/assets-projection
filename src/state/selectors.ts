@@ -1,8 +1,7 @@
 // Source: RESEARCH.md §"Pattern 1: Selector Function" and §"Pattern Map"
-// Plan 02 will fill in the full EChartsOption construction.
-// This module exports typed function stubs so Phase 3 plan 01 selector tests
-// can discover and typecheck the required exports before implementation.
+// Plan 02 fills in full EChartsOption construction for VIZ-01/02/03.
 import type { EChartsOption } from 'echarts';
+import type { CallbackDataParams } from 'echarts/types/dist/shared.js';
 import type { ProjectionResult, SourceRecord } from '../core/types.js';
 
 // ---------------------------------------------------------------------------
@@ -32,35 +31,88 @@ export function formatWealth(v: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive a human-readable tier label from a [0,1] percentile fraction.
+ * VIZ-03: used in the time-series tooltip.
+ * Thresholds: >= 0.999 → 'top 0.1%'; >= 0.99 → 'top 1%'; >= 0.90 → 'top 10%'; else → 'median'
+ */
+function deriveTier(userPercentile: number): string {
+  if (userPercentile >= 0.999) return 'top 0.1%';
+  if (userPercentile >= 0.99) return 'top 1%';
+  if (userPercentile >= 0.90) return 'top 10%';
+  return 'median';
+}
+
+// ---------------------------------------------------------------------------
 // VIZ-01: Time-series chart selector
 // ---------------------------------------------------------------------------
 
 /**
  * selectTimeSeriesOption — maps ProjectionResult to EChartsOption for Chart 1.
  * VIZ-01: user trajectory over horizon; VIZ-02: log/linear toggle.
- * Plan 02 fills in the full option; this stub returns a valid skeleton.
+ * VIZ-03: tooltip formatter shows year, wealth, rank, and tier.
+ * T-03-04: log axis zero-guard applied (Math.max(1, value) + yAxis.min=1).
+ * T-03-03: tooltip strings built only from numeric model output — no user-supplied strings.
  */
 export function selectTimeSeriesOption(
   result: ProjectionResult,
   yAxisType: 'log' | 'value',
 ): EChartsOption {
-  // TODO (Plan 02): full EChartsOption implementation
   return {
-    xAxis: { type: 'value', name: 'Year' },
+    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    xAxis: {
+      type: 'value',
+      name: 'Year',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      axisLabel: { fontSize: 14, fontWeight: 400 },
+    },
     yAxis: {
       type: yAxisType,
       name: "Real wealth (today's money)",
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      // T-03-04: log(0) guard — min=1 when log axis active
       min: yAxisType === 'log' ? 1 : undefined,
+      axisLabel: {
+        fontSize: 14,
+        fontWeight: 400,
+        formatter: (v: number) => formatWealth(v),
+      },
     },
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      // VIZ-03: formatter builds string from numeric model output only (T-03-03)
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        const paramsArr = Array.isArray(params) ? params : [params];
+        if (!paramsArr.length) return '';
+        const dataIndex = paramsArr[0]!.dataIndex ?? 0;
+        const snap = result.series[dataIndex];
+        const relPos = result.relativePosition[dataIndex];
+        if (!snap || !relPos) return '';
+        const tier = deriveTier(snap.userPercentile);
+        return (
+          `Year ${snap.year} · ` +
+          `Rank: ${relPos.userRank.toFixed(1)}th · ` +
+          `Tier: ${tier} · ` +
+          `Wealth: ${formatWealth(snap.userWealth)}`
+        );
+      },
+    },
     series: [
       {
         type: 'line',
         name: 'Your wealth',
+        // T-03-04: Math.max(1, value) guard on data prevents log(0) in ECharts
         data: result.series.map((s) => [
           s.year,
           yAxisType === 'log' ? Math.max(1, s.userWealth) : s.userWealth,
         ]),
+        lineStyle: { color: COLORS.user, width: 2 },
+        itemStyle: { color: COLORS.user },
+        showSymbol: false,
       },
     ],
   };
@@ -72,22 +124,50 @@ export function selectTimeSeriesOption(
 
 /**
  * selectDivergenceOption — maps ProjectionResult to EChartsOption for Chart 2.
- * VIZ-03: hover tooltips; VIZ-04: multi-tier overlay.
- * Plan 02 fills in the full option; this stub returns a valid skeleton.
+ * VIZ-03: hover tooltips; VIZ-04: multi-tier overlay with all 5 series.
+ * T-03-04: log axis zero-guard applied to all 5 series.
+ * T-03-03: tooltip strings built only from numeric model output.
  */
 export function selectDivergenceOption(
   result: ProjectionResult,
   yAxisType: 'log' | 'value',
 ): EChartsOption {
-  // TODO (Plan 02): full EChartsOption with all 5 series + combined tooltip
   return {
-    xAxis: { type: 'value', name: 'Year' },
+    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    xAxis: {
+      type: 'value',
+      name: 'Year',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      axisLabel: { fontSize: 14, fontWeight: 400 },
+    },
     yAxis: {
       type: yAxisType,
       name: "Real wealth (today's money)",
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
       min: yAxisType === 'log' ? 1 : undefined,
+      axisLabel: {
+        fontSize: 14,
+        fontWeight: 400,
+        formatter: (v: number) => formatWealth(v),
+      },
     },
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        const paramsArr = Array.isArray(params) ? params : [params];
+        if (!paramsArr.length) return '';
+        const dataIndex = paramsArr[0]!.dataIndex ?? 0;
+        const snap = result.series[dataIndex];
+        const relPos = result.relativePosition[dataIndex];
+        if (!snap || !relPos) return '';
+        const lines = paramsArr.map((p) => {
+          const val = Array.isArray(p.value) ? (p.value as number[])[1] ?? 0 : (p.value as number) ?? 0;
+          return `${p.seriesName}: ${formatWealth(val)}`;
+        });
+        return `Year ${snap.year} · Rank: ${relPos.userRank.toFixed(1)}th<br/>${lines.join('<br/>')}`;
+      },
+    },
     series: [
       {
         type: 'line',
