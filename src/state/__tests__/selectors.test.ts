@@ -15,7 +15,10 @@ import {
   selectRelPosOption,
   selectCitationFooter,
   formatWealth,
+  selectReinflated,
+  selectSummary,
 } from '../selectors.js';
+import type { Summary } from '../selectors.js';
 import { makeSyntheticParams, syntheticInputs } from '../../core/__tests__/testUtils.js';
 import { projectionEngine } from '../../core/engine.js';
 import { SOURCES } from '../../data/sources.js';
@@ -305,5 +308,124 @@ describe('formatWealth', () => {
 
   it('formats small values with no decimal places', () => {
     expect(formatWealth(500)).toBe('$500');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ENTRY-04: selectReinflated — display-layer nominal re-inflation (D-06/D-08)
+// ---------------------------------------------------------------------------
+
+describe('ENTRY-04: selectReinflated', () => {
+  it('basis=real returns the result unchanged (identity)', () => {
+    const reinflated = selectReinflated(result, 'real', 0.025);
+    // Should be same reference or structurally identical
+    expect(reinflated).toBe(result);
+  });
+
+  it('basis=nominal, i=0.025: year-0 userWealth unchanged (factor = (1.025)^0 = 1)', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    const origYear0 = result.series[0]!.userWealth;
+    const reinflYear0 = reinflated.series[0]!.userWealth;
+    expect(Math.abs(reinflYear0 - origYear0)).toBeLessThan(1e-6);
+  });
+
+  it('basis=nominal, i=0.025: year-5 userWealth = original × (1.025)^5', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    const origYear5 = result.series[5]!.userWealth;
+    const expectedFactor = (1.025) ** 5;
+    const expected = origYear5 * expectedFactor;
+    expect(Math.abs(reinflated.series[5]!.userWealth - expected)).toBeLessThan(1e-6);
+  });
+
+  it('basis=nominal: anchorWealth.median at year 2 = original × (1.025)^2', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    const origYear2Median = result.series[2]!.anchorWealth.median;
+    const expectedFactor = (1.025) ** 2;
+    const expected = origYear2Median * expectedFactor;
+    expect(Math.abs(reinflated.series[2]!.anchorWealth.median - expected)).toBeLessThan(1e-6);
+  });
+
+  it('basis=nominal: relativePosition[*].userRank is unchanged (D-08 rank invariant)', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    for (let i = 0; i < result.relativePosition.length; i++) {
+      expect(reinflated.relativePosition[i]!.userRank).toBe(result.relativePosition[i]!.userRank);
+    }
+  });
+
+  it('basis=nominal: series[*].userPercentile unchanged (unitless)', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    for (let i = 0; i < result.series.length; i++) {
+      expect(reinflated.series[i]!.userPercentile).toBe(result.series[i]!.userPercentile);
+    }
+  });
+
+  it('basis=nominal: series[*].assetInflation unchanged (unitless)', () => {
+    const reinflated = selectReinflated(result, 'nominal', 0.025);
+    for (let i = 0; i < result.series.length; i++) {
+      expect(reinflated.series[i]!.assetInflation).toBe(result.series[i]!.assetInflation);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ENTRY-05: selectSummary — summary readout derivation (D-13)
+// ---------------------------------------------------------------------------
+
+describe('ENTRY-05: selectSummary', () => {
+  it('endingWealth equals the last series snapshot userWealth', () => {
+    const summary: Summary = selectSummary(result);
+    const lastWealth = result.series[result.series.length - 1]!.userWealth;
+    expect(summary.endingWealth).toBe(lastWealth);
+  });
+
+  it('startRank equals relativePosition[0].userRank', () => {
+    const summary: Summary = selectSummary(result);
+    expect(summary.startRank).toBe(result.relativePosition[0]!.userRank);
+  });
+
+  it('endRank equals relativePosition[last].userRank', () => {
+    const summary: Summary = selectSummary(result);
+    const lastRank = result.relativePosition[result.relativePosition.length - 1]!.userRank;
+    expect(summary.endRank).toBe(lastRank);
+  });
+
+  it('growthMultiple > 0 and cagr > 0 on positive fixture', () => {
+    const summary: Summary = selectSummary(result);
+    expect(summary.growthMultiple).toBeGreaterThan(0);
+    expect(summary.cagr).toBeGreaterThan(0);
+  });
+
+  it('division-by-zero guard: when start === 0, growthMultiple === 0 and cagr === 0', () => {
+    const zeroStartResult = {
+      ...result,
+      series: [
+        { ...result.series[0]!, userWealth: 0 },
+        ...result.series.slice(1),
+      ],
+    };
+    const summary: Summary = selectSummary(zeroStartResult);
+    expect(summary.growthMultiple).toBe(0);
+    expect(summary.cagr).toBe(0);
+  });
+
+  it('nominal-path D-08 rank invariant (W-2): nominal endingWealth > real endingWealth', () => {
+    const realSummary: Summary = selectSummary(result);
+    const nominalResult = selectReinflated(result, 'nominal', 0.025);
+    const nominalSummary: Summary = selectSummary(nominalResult);
+    expect(nominalSummary.endingWealth).toBeGreaterThan(realSummary.endingWealth);
+  });
+
+  it('nominal-path D-08 rank invariant (W-2): startRank identical in real and nominal', () => {
+    const realSummary: Summary = selectSummary(result);
+    const nominalResult = selectReinflated(result, 'nominal', 0.025);
+    const nominalSummary: Summary = selectSummary(nominalResult);
+    expect(nominalSummary.startRank).toBe(realSummary.startRank);
+  });
+
+  it('nominal-path D-08 rank invariant (W-2): endRank identical in real and nominal', () => {
+    const realSummary: Summary = selectSummary(result);
+    const nominalResult = selectReinflated(result, 'nominal', 0.025);
+    const nominalSummary: Summary = selectSummary(nominalResult);
+    expect(nominalSummary.endRank).toBe(realSummary.endRank);
   });
 });
