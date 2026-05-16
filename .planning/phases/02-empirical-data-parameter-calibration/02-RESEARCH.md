@@ -426,21 +426,21 @@ Bound + horizon definitions are Claude's discretion (D-11/discretion); recommend
 | A3 | The corrected Fagereng figures (raw ~500bp 10th–90th return spread; ~18pp gross / ~10pp net-of-tax net-worth-percentile association) are accurate | Pitfall 1 / Code Examples | Medium-Low — cross-verified WebSearch (econometricsociety.org / NBER w22822) AND PITFALLS.md HIGH-confidence primary-source read; planner should still confirm at the exact table during calibration (D-04 requires reading the table-level definition anyway) |
 | A4 | Specific frozen anchor *values* and the back-solved dragStrength *number* are NOT asserted here | Calibration sections | N/A by design — D-04/D-07 make these a calibration *procedure* output; this research prescribes the procedure and the corrected framing, not the final numbers (which require primary-source table reading during execution) |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact "asset-inflation share of net-worth growth" metric definition for the back-solve.**
    - What we know: D-08 fixes the *target* (McKinsey ~80%) and excludes the ~1.3× ratio. `YearSnapshot.assetInflation` is the per-year haircut; total growth is derivable from the series.
    - What's unclear: the precise numerator/denominator (cumulative asset-inflation contribution ÷ total net-worth growth over 2000–2021-like window) that provably corresponds to McKinsey's definition ("share of net-worth growth from asset-price inflation, vs ~1/5 from new saving/investment").
-   - Recommendation: planner pins this in `calibration.test.ts` as an explicit, commented formula and cites the McKinsey definition it maps to; treat as a small spike inside Wave C.
+   - RESOLVED: Plan 02-04 Task 2 pins the metric in `calibration.test.ts` as an explicit, commented formula = cumulative asset-inflation contribution ÷ total real net-worth growth over the window, with a comment stating it maps to McKinsey's "share of net-worth growth from asset-price inflation" and explicitly excludes the ~1.3× asset/GDP ratio (D-08).
 
 2. **"2000–2021-like baseline" parameterization.**
    - What we know: the back-solve runs the engine over a baseline run (D-07).
    - What's unclear: what inputs/anchor values constitute the baseline (the same calibrated defaults? a historical-anchor variant?).
-   - Recommendation: use the calibrated real defaults as the baseline (simplest, self-consistent, avoids a second sourced data set out of scope per Deferred); document the choice in the dragStrength `note`.
+   - RESOLVED: Plan 02-04 Task 2 uses the calibrated real `DEFAULTS` as the 2000–2021-like baseline (simplest, self-consistent, avoids a second sourced data set out of scope per Deferred); the choice is documented in the dragStrength `note`.
 
 3. **Plausible-bounds definition for the divergence sanity-check.**
    - What we know: success criterion 5 + Claude's discretion (relative bound recommended).
-   - Recommendation: top01 ≤ documented multiple of total distribution wealth, all anchors finite & positive, over the default horizon — finalize the multiple during planning with a one-line rationale.
+   - RESOLVED: Plan 02-04 Task 2's divergence sanity-check uses a documented relative ceiling — `top01` ≤ a documented multiple of total distribution wealth, all anchors finite & positive, over the default horizon — with the multiple's rationale stated in a one-line comment in `calibration.test.ts`.
 
 ## Environment Availability
 
