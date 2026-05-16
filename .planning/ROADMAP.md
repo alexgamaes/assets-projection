@@ -61,11 +61,11 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — CR-01/CR-02 fail-loud guards + negative tests (must merge green before any real data)
+- [x] 02-01-PLAN.md — CR-01/CR-02 fail-loud guards + negative tests (must merge green before any real data)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — SourceRecord type migration + Phase 1 fixture migration
+- [x] 02-02-PLAN.md — SourceRecord type migration + Phase 1 fixture migration
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -133,7 +133,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
-| 2. Empirical Data & Parameter Calibration | 0/4 | Not started | - |
+| 2. Empirical Data & Parameter Calibration | 2/4 | In Progress|  |
 | 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
