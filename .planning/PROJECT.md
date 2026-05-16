@@ -80,6 +80,13 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 | Minimal input = wealth + annual savings | Lowers friction; "let them start playing with it" | — Pending |
 | Public web app, no accounts | Personal tool shared publicly; no per-user persistence needed | — Pending |
 | Empirically-sourced defaults, configurable overrides | Neutral + grounded, but user can explore | — Pending |
+| Default tier anchors = median / top 10% / top 1% / top 0.1% (continuous interpolated curve, not buckets) | Literature reliably cites returns down to ~top 0.1%; deeper tiers aren't cleanly citeable (goal #4) | — Pending |
+
+## Follow-ups / Later Analysis
+
+<!-- Deferred questions to revisit; not blocking current roadmap. -->
+
+- **Dynamic tail resolution.** Concern: as wealth concentrates over the horizon, mass may push further into the extreme tail (top 0.01%, 0.001%, …) and the fixed 4-anchor curve could under-resolve where the action moves. Revisit during/after Phase 2 calibration: consider whether a top 0.01%+ anchor (citeable source required — Saez-Zucman ultra-wealth or caveated estimate) or an adaptive tail is warranted for the relative-position model (VIZ-05 / MODEL-03). Not blocking; keep 4 anchors for now.
 
 ## Evolution
 
