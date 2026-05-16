@@ -339,3 +339,76 @@ export function selectCitationFooter(
 ): SourceRecord[] {
   return Object.values(sources);
 }
+
+// ---------------------------------------------------------------------------
+// ENTRY-04: selectReinflated — display-layer nominal re-inflation (D-06/D-08)
+// ---------------------------------------------------------------------------
+
+/**
+ * selectReinflated — re-inflates a real-basis ProjectionResult for nominal display.
+ * D-06: re-inflation is display-layer only; src/core/engine.ts remains real-only.
+ * D-08: relativePosition (rank/share) is NEVER re-inflated — rank is unitless.
+ * If basis === 'real', returns the identical result reference (no copy).
+ */
+export function selectReinflated(
+  r: ProjectionResult,
+  basis: 'real' | 'nominal',
+  i: number,
+): ProjectionResult {
+  if (basis === 'real') return r;
+  return {
+    ...r,
+    series: r.series.map((s) => {
+      const f = (1 + i) ** s.year;
+      return {
+        ...s, // preserves userPercentile, topSetPercentile, assetInflation, _totalWealth, etc.
+        userWealth: s.userWealth * f,
+        anchorWealth: {
+          median: s.anchorWealth.median * f,
+          top10: s.anchorWealth.top10 * f,
+          top1: s.anchorWealth.top1 * f,
+          top01: s.anchorWealth.top01 * f,
+        },
+        // userPercentile / topSetPercentile / assetInflation: NOT re-inflated (unitless)
+      };
+    }),
+    relativePosition: r.relativePosition, // rank/share unaffected (D-08) — Chart 3 untouched
+  };
+}
+
+// ---------------------------------------------------------------------------
+// ENTRY-05: selectSummary — summary readout derivation (D-13)
+// ---------------------------------------------------------------------------
+
+/**
+ * Summary — the five metrics rendered by SummaryReadout.
+ * Call selectReinflated first when basis === 'nominal' so money fields are already scaled.
+ * startRank / endRank come from relativePosition and are basis-independent.
+ */
+export interface Summary {
+  endingWealth: number;   // last series userWealth (already basis-adjusted)
+  growthMultiple: number; // endingWealth / startingWealth
+  cagr: number;           // (end/start)^(1/years) - 1
+  startRank: number;      // relativePosition[0].userRank   (0–100, basis-independent)
+  endRank: number;        // relativePosition[last].userRank
+}
+
+/**
+ * selectSummary — derives the five summary metrics from a ProjectionResult.
+ * Guard: if startingWealth <= 0, growthMultiple and cagr are 0 (no division-by-zero).
+ */
+export function selectSummary(r: ProjectionResult): Summary {
+  const first = r.series[0]!;
+  const last = r.series[r.series.length - 1]!;
+  const years = last.year - first.year;
+  const start = first.userWealth;
+  const end = last.userWealth;
+  const rp = r.relativePosition;
+  return {
+    endingWealth: end,
+    growthMultiple: start > 0 ? end / start : 0,
+    cagr: start > 0 && years > 0 ? (end / start) ** (1 / years) - 1 : 0,
+    startRank: rp[0]!.userRank,
+    endRank: rp[rp.length - 1]!.userRank,
+  };
+}
