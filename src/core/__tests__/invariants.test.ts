@@ -50,7 +50,7 @@ describe('MODEL-01: core/ is framework-free and deterministic', () => {
 
     for (const file of sources) {
       const lines = readFileSync(file, 'utf-8').split('\n');
-      lines.forEach((text, idx) => {
+      lines.forEach((text: string, idx: number) => {
         if (FORBIDDEN_PATTERN.test(text)) {
           violations.push({ file, line: idx + 1, text: text.trim() });
         }
