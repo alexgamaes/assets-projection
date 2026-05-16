@@ -8,6 +8,17 @@ A web-based wealth projection calculator that models capital growth using empiri
 
 Make the exponential, distribution-dependent nature of capital returns viscerally clear — using real historical data, presented neutrally — so a person can see both their own trajectory and how their relative position shifts over time.
 
+## Goals (priority order)
+
+These are the user's stated goals, in strict priority order. When tradeoffs arise, earlier goals win over later ones.
+
+1. **Make it easy to visualize and understand the exponential nature of capital returns.**
+2. **Include wealth inequality** — you are not in a vacuum; people with larger wealth will likely impact you.
+3. **Be neutral and unbiased** — this is neither a critique nor an endorsement of capitalism; we are only trying to understand the mathematics behind it.
+4. **Use historical data to derive default values** — don't assume; ground defaults in real research.
+5. **Keep it simple and clear to use** — don't overwhelm the user with options; let them start playing with it immediately.
+6. **Allow configuration of different values and settings** — advanced users can override defaults.
+
 ## Requirements
 
 ### Validated
