@@ -51,6 +51,11 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 - Finite-world / zero-sum economics — explicitly assume infinite growth is possible; drag comes from asset-price inflation, not a fixed pie
 - Political commentary or editorializing — neutrality is a hard requirement
 
+## Current State
+
+- **Phase 1 (Model Foundation) complete (2026-05-16):** pure, framework-free, deterministic projection engine — heterogeneous returns by percentile, asset-price-inflation drag, relative-position derivation, nominal/real basis invariant — proven by 44 numerical unit tests (tsc strict, 0 todo). Library only; no UI/IO. Requirements stay in Active (ship-to-validate semantics; engine not yet user-facing).
+- **Carried into Phase 2:** documented preconditions from review CR-01/CR-02 — calibration must keep Pareto alpha > 1 (top01/top1 < 10) and validate bisect bracket coverage before loading real empirical anchors (see `.planning/phases/01-model-foundation/01-HUMAN-UAT.md`).
+
 ## Context
 
 - Primary user is the project owner; public access is a convenience, not a product mandate. Polish matters less than correctness and clarity of the model.
@@ -106,4 +111,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-15 after initialization*
+*Last updated: 2026-05-16 after Phase 1 (Model Foundation) completion*
