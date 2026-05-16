@@ -44,8 +44,9 @@ describe('VIZ-01: selectTimeSeriesOption', () => {
     const option = selectTimeSeriesOption(result, 'value');
     const series = option.series as Array<{ data: unknown[] }>;
     expect(series.length).toBeGreaterThan(0);
-    // TODO (Plan 02): assert series[0].data length === horizon + 1
     expect(series[0]).toBeDefined();
+    // horizon: 5, so we expect 6 data points (year 0..5)
+    expect(series[0]!.data).toHaveLength(params.horizon + 1);
   });
 });
 
@@ -76,14 +77,38 @@ describe('VIZ-02: selectTimeSeriesOption log/linear toggle', () => {
 describe('VIZ-03: selectDivergenceOption tooltip', () => {
   it('divergence option has a tooltip configured', () => {
     const option = selectDivergenceOption(result, 'value');
-    // TODO (Plan 02): assert tooltip.formatter is a function and returns expected string
     expect(option.tooltip).toBeDefined();
+    const tooltip = option.tooltip as { formatter?: unknown };
+    expect(typeof tooltip.formatter).toBe('function');
   });
 
-  it('selectTimeSeriesOption has a tooltip configured', () => {
+  it('selectTimeSeriesOption tooltip formatter is a callable function', () => {
     const option = selectTimeSeriesOption(result, 'value');
-    // TODO (Plan 02): assert tooltip.formatter is a function and includes year/wealth/rank
-    expect(option.tooltip).toBeDefined();
+    const tooltip = option.tooltip as { formatter?: unknown };
+    expect(typeof tooltip.formatter).toBe('function');
+  });
+
+  it('selectTimeSeriesOption tooltip formatter returns a string containing the year', () => {
+    const option = selectTimeSeriesOption(result, 'value');
+    const tooltip = option.tooltip as { formatter?: (params: unknown[]) => string };
+    const formatter = tooltip.formatter!;
+    // Simulate ECharts calling formatter with dataIndex=0
+    const fakeParams = [{ dataIndex: 0, value: [0, 120000], seriesName: 'Your wealth', color: '#0F766E' }];
+    const output = formatter(fakeParams);
+    expect(typeof output).toBe('string');
+    // Must contain the year value (year 0 of the series)
+    expect(output).toContain('0');
+  });
+
+  it('selectTimeSeriesOption tooltip formatter output contains rank and tier', () => {
+    const option = selectTimeSeriesOption(result, 'value');
+    const tooltip = option.tooltip as { formatter?: (params: unknown[]) => string };
+    const formatter = tooltip.formatter!;
+    const fakeParams = [{ dataIndex: 0, value: [0, 120000], seriesName: 'Your wealth', color: '#0F766E' }];
+    const output = formatter(fakeParams);
+    // Must contain rank (case-insensitive) and tier information
+    expect(output.toLowerCase()).toMatch(/rank/);
+    expect(output.toLowerCase()).toMatch(/tier|top|median/);
   });
 });
 
