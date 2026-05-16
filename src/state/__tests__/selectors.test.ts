@@ -51,6 +51,18 @@ describe('VIZ-01: selectTimeSeriesOption', () => {
     // horizon: 5, so we expect 6 data points (year 0..5)
     expect(series[0]!.data).toHaveLength(params.horizon + 1);
   });
+
+  it('user series (series[0]) lineStyle.width is 3.5', () => {
+    const option = selectTimeSeriesOption(result, 'value');
+    const series = option.series as Array<{ lineStyle?: { width?: number } }>;
+    expect(series[0]?.lineStyle?.width).toBe(3.5);
+  });
+
+  it('user series (series[0]) has endLabel with show:true', () => {
+    const option = selectTimeSeriesOption(result, 'value');
+    const series = option.series as Array<{ endLabel?: { show?: boolean } }>;
+    expect(series[0]?.endLabel?.show).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -192,6 +204,26 @@ describe('VIZ-04: selectDivergenceOption', () => {
     expect(output.toLowerCase()).toMatch(/rank/);
     expect(output.toLowerCase()).toMatch(/tier|top|median/);
   });
+
+  it('user series (series[0]) lineStyle.width is 3.5', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const series = option.series as Array<{ lineStyle?: { width?: number } }>;
+    expect(series[0]?.lineStyle?.width).toBe(3.5);
+  });
+
+  it('tier series (series[1..4]) lineStyle.width remains 2', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const series = option.series as Array<{ lineStyle?: { width?: number } }>;
+    for (const tierSeries of series.slice(1)) {
+      expect(tierSeries?.lineStyle?.width).toBe(2);
+    }
+  });
+
+  it('user series (series[0]) has endLabel with show:true', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const series = option.series as Array<{ endLabel?: { show?: boolean } }>;
+    expect(series[0]?.endLabel?.show).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -264,6 +296,18 @@ describe('VIZ-05: selectRelPosOption', () => {
     // Must contain "Rank" and "Real wealth" (D-11 tooltip safeguard)
     expect(output).toMatch(/Rank/);
     expect(output).toMatch(/Real wealth/);
+  });
+
+  it('user series (series[0]) lineStyle.width is 3.5', () => {
+    const option = selectRelPosOption(result);
+    const series = option.series as Array<{ lineStyle?: { width?: number } }>;
+    expect(series[0]?.lineStyle?.width).toBe(3.5);
+  });
+
+  it('user series (series[0]) has endLabel with show:true', () => {
+    const option = selectRelPosOption(result);
+    const series = option.series as Array<{ endLabel?: { show?: boolean } }>;
+    expect(series[0]?.endLabel?.show).toBe(true);
   });
 });
 
