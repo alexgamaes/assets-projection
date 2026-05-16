@@ -1,10 +1,11 @@
 ---
 phase: 3
 slug: selectors-visualization-neutrality-style-guide
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-16
+reviewed_at: 2026-05-16
 ---
 
 # Phase 3 — UI Design Contract
