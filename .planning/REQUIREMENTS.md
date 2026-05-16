@@ -40,6 +40,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **VIZ-04**: A multi-tier comparison overlay plots the user vs. representative tiers (median, top 1%, top 0.1%) in one frame
 - [ ] **VIZ-05**: A relative-position trajectory shows the user's wealth share/rank changing over the horizon
 - [ ] **VIZ-06**: Visible source citations are present (footer line minimum) tracing displayed defaults to named research
+- [ ] **VIZ-07**: A tier share-of-economy view shows each wealth-percentile tier (median, top10, top1, top01) and the user as a fraction of total distribution wealth — as a 100%-stacked-area trajectory across the horizon plus an end-of-horizon donut — using the existing categorical palette (no semantic red/green) and a mandatory neutral caption clarifying shares can shift while every tier's real wealth still grows (no zero-sum implication)
 
 ### Neutrality (NEUT)
 
@@ -100,6 +101,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VIZ-04 | Phase 3 | Pending |
 | VIZ-05 | Phase 3 | Pending |
 | VIZ-06 | Phase 3 | Pending |
+| VIZ-07 | Phase 4.1 | Pending |
 | NEUT-01 | Phase 3 | Pending |
 | ENTRY-01 | Phase 4 | Pending |
 | ENTRY-02 | Phase 4 | Pending |

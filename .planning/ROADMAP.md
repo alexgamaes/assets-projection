@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature (completed 2026-05-16)
 - [x] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact (completed 2026-05-16)
 - [x] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout (completed 2026-05-16)
+- [ ] **Phase 4.1: Tier Share-of-Economy Visualization** - (INSERTED) 100%-stacked-area share-of-total trajectory + end-of-horizon donut for each tier and the user, with neutral no-zero-sum caption
 - [ ] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide
 
 ## Phase Details
@@ -131,6 +132,27 @@ Plans:
 
 - [x] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
 
+### Phase 04.1: Tier Share-of-Economy Visualization (INSERTED)
+
+**Goal**: Make wealth concentration legible as a *share of the whole*: each percentile tier (median p50, top10 p90, top1 p99, top01 p99.9) and the user are shown as a fraction of total distribution wealth, both as a trajectory over the horizon and as a final-year snapshot — so the reader sees not just that tiers diverge in level but how the composition of total wealth shifts over time. Inserted before Neutrality Review so Phase 5 reviews this chart's copy and palette.
+**Mode:** mvp
+**Depends on**: Phase 4
+**Requirements**: VIZ-07
+**Success Criteria** (what must be TRUE):
+
+  1. The engine/selector layer computes each tier's wealth mass and its fraction of total distribution wealth per horizon year (today only userShare/topSetPercentile exist — no per-tier share series)
+  2. A 100%-stacked-area chart renders each tier's + the user's share of total wealth across every horizon year, composed into AppShell
+  3. An end-of-horizon donut summarizes the final-year share split for the same groups
+  4. Both charts reuse the existing categorical palette — no semantic red/green, no new hue (D-03)
+  5. Each chart carries a mandatory neutral caption clarifying shares can shift while every tier's real wealth still grows (no zero-sum implication), consistent with the D-15 disclosure pattern
+  6. Shares are fractions of total, so they are basis-invariant — the view must not change with the real/nominal toggle; this is asserted in tests
+
+**Plans**: TBD
+**UI hint**: yes
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+
 ### Phase 5: Neutrality Review & Release Readiness
 
 **Goal**: Every on-screen narrative annotation, label, microcopy string, and chart palette decision shipped in Phases 3 and 4 is reviewed against the neutrality style guide and corrected, so the released tool describes mechanism as fact without assigning blame or virtue.
@@ -150,7 +172,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -158,4 +180,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
+| 4.1. Tier Share-of-Economy Visualization | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |

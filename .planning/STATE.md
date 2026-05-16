@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 04 complete (3/3) — ready to discuss Phase 5
-last_updated: 2026-05-16T22:02:13.298Z
-last_activity: 2026-05-16 -- Phase 04 execution started
+status: planning
+stopped_at: Phase 4 UI-SPEC approved
+last_updated: "2026-05-16T22:53:30.285Z"
+last_activity: 2026-05-16 - Inserted Phase 4.1 (Tier Share-of-Economy Visualization)
 progress:
-  total_phases: 5
-  completed_phases: 3
+  total_phases: 6
+  completed_phases: 4
   total_plans: 14
   completed_plans: 14
-  percent: 60
+  percent: 67
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-15)
 
 ## Current Position
 
-Phase: 5
+Phase: 4.1
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-16 - Completed quick task 260516-lpb: widen user wealth line + "You" label
+Last activity: 2026-05-16 - Inserted Phase 4.1 (Tier Share-of-Economy Visualization)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,10 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 04.1 inserted after Phase 4: Tier Share-of-Economy Visualization: stacked-area share-of-total trajectory + end-of-horizon donut (VIZ-07), inserted before Neutrality Review (URGENT)
 
 ### Decisions
 
