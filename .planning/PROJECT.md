@@ -60,7 +60,7 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 
 - Primary user is the project owner; public access is a convenience, not a product mandate. Polish matters less than correctness and clarity of the model.
 - The differentiator is empirical grounding. Defaults must trace to real research, not assumptions. Key sources identified during initialization:
-  - **Fagereng, Guiso, Malacrino, Pistaferri (2020)** — heterogeneity & persistence in returns to wealth; ~18pp gap between 10th and 90th percentile returns.
+  - **Fagereng, Guiso, Malacrino, Pistaferri (2020)** — heterogeneity & persistence in returns to wealth; raw cross-sectional 10th–90th return spread ~500bp (~5pp); moving from the 10th to 90th net-worth percentile is *associated* with a ~10pp higher return net of tax — used only as qualitative gradient justification, not a per-tier rate gap; per-tier levels triangulated from Bach/Saez-Zucman/JST (D-06).
   - **Bach, Calvet, Sodini (2020)** — the wealthy earn higher returns via more systematic risk and leverage.
   - **Saez & Zucman** — top returns driven by unrealized gains in private business; r > g.
   - **Jordà, Schularick, Taylor — "The Rate of Return on Everything" (1870–2015)** — long-run real returns: housing ~7%, equities ~7%, bonds ~2.5%, cash ~1%.
