@@ -169,7 +169,13 @@ export interface YearSnapshot {
   /** User's projected wealth (real terms). */
   userWealth: number;
   /**
-   * User's estimated wealth percentile in the distribution at this year (0–100).
+   * User's estimated wealth position in the distribution at this year,
+   * expressed as a cumulative-density fraction in [0, 1] (0 = poorest,
+   * 1 = richest) — NOT a 0–100 percentile. This is the raw `percentileOf`
+   * CDF value the engine compounds against (`returnAtPercentile` expects
+   * the same [0, 1] domain). Consumers wanting a conventional 0–100
+   * percentile must multiply by 100 (see `relativePosition.ts`, which
+   * derives `userRank = userPercentile * 100`).
    * Derived by inverting the calibrated lognormal+Pareto curve.
    */
   userPercentile: number;
