@@ -382,7 +382,12 @@ test('consuming a nominal param where real is expected throws', () => {
 | A4 | C1 (density-matched) stitch is achievable with 4 anchors plus continuity | Pattern 3 / Pitfall 5 | If 4 anchors + C0 + C1 over-constrain, may only get C0; then the residual density jump must be bounded and documented rather than eliminated. Affects chart smoothness in Phase 3, not engine correctness. |
 | A5 | User trajectory does not perturb the aggregate/anchors (negligible single-saver mass) | Phase boundary (CONTEXT deferred) | If the user *should* affect the distribution, the loop structure changes (user becomes a tracked anchor). CONTEXT.md flags this for planning confirmation — must be resolved before the engine loop is finalized. |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All three questions were resolved during planning and routed into executable tasks (plan-checker, iteration 1):
+> - **Q1 (calibration/stitch)** → RESOLVED: Plan 01-02 is a dedicated distribution-calibration spike that locks the anchor→(μ,σ,α,x_m) assignment + stitch point in its `<interfaces>` and proves it against hand-computed anchors in `distribution.test.ts` before the engine loop.
+> - **Q2 (tolerance scheme)** → RESOLVED: Two-tolerance scheme baked into 01-01/01-02 — `<1e-9` for the drag-off annuity golden master (D-11), `DIST_TOL=1e-6` for distribution-curve math.
+> - **Q3 (user-as-test-particle)** → RESOLVED: Default "no perturbation" confirmed and asserted in Plan 01-03 (per CONTEXT.md deferred note).
 
 1. **Anchor→(μ,σ,α,x_m) calibration well-posedness and the stitch point.**
    - What we know: lognormal CDF/quantile and Pareto quantile/top-share all have standard closed forms; 4 anchors + continuity is *roughly* the right number of constraints.
