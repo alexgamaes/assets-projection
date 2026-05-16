@@ -54,7 +54,7 @@
  *   Φ(0.5) ≈ 0.691462
  */
 import { describe, it, expect } from 'vitest';
-import { DIST_TOL } from './testUtils.js';
+import { DIST_TOL, synParam } from './testUtils.js';
 import {
   calibrateCurve,
   quantile,
@@ -72,12 +72,11 @@ import type { Anchors, ReturnByTier } from '../types.js';
 
 /** Build a synthetic Anchors object with given wealth values. */
 function makeAnchors(median: number, top10: number, top1: number, top01: number): Anchors {
-  const sp = (v: number) => ({ value: v, basis: 'real' as const, source: null });
   return {
-    median: sp(median),
-    top10: sp(top10),
-    top1: sp(top1),
-    top01: sp(top01),
+    median: synParam(median),
+    top10: synParam(top10),
+    top1: synParam(top1),
+    top01: synParam(top01),
   };
 }
 
@@ -88,12 +87,11 @@ function makeReturnByTier(
   top1: number,
   top01: number
 ): ReturnByTier {
-  const sp = (v: number) => ({ value: v, basis: 'real' as const, source: null });
   return {
-    median: sp(median),
-    top10: sp(top10),
-    top1: sp(top1),
-    top01: sp(top01),
+    median: synParam(median),
+    top10: synParam(top10),
+    top1: synParam(top1),
+    top01: synParam(top01),
   };
 }
 

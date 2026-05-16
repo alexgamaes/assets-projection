@@ -29,7 +29,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { projectionEngine } from '../engine.js';
-import { analyticOrdinaryAnnuity, relErr, DIST_TOL } from './testUtils.js';
+import { analyticOrdinaryAnnuity, relErr, DIST_TOL, synParam } from './testUtils.js';
 
 // ---------------------------------------------------------------------------
 // Fixture parameters
@@ -68,21 +68,21 @@ import { analyticOrdinaryAnnuity, relErr, DIST_TOL } from './testUtils.js';
  */
 const FIXTURE_PARAMS = {
   anchors: {
-    median: { value: 50_000, basis: 'real' as const, source: null, note: 'synthetic p50 anchor' },
-    top10: { value: 300_000, basis: 'real' as const, source: null, note: 'synthetic p90 anchor' },
-    top1: { value: 2_000_000, basis: 'real' as const, source: null, note: 'synthetic p99 anchor' },
-    top01: { value: 15_000_000, basis: 'real' as const, source: null, note: 'synthetic p99.9 anchor' },
+    median: { ...synParam(50_000), note: 'synthetic p50 anchor' },
+    top10: { ...synParam(300_000), note: 'synthetic p90 anchor' },
+    top1: { ...synParam(2_000_000), note: 'synthetic p99 anchor' },
+    top01: { ...synParam(15_000_000), note: 'synthetic p99.9 anchor' },
   },
   returnByTier: {
-    median: { value: 0.02, basis: 'real' as const, source: null, note: 'synthetic 2% real return' },
-    top10: { value: 0.04, basis: 'real' as const, source: null, note: 'synthetic 4% real return' },
-    top1: { value: 0.07, basis: 'real' as const, source: null, note: 'synthetic 7% real return' },
-    top01: { value: 0.12, basis: 'real' as const, source: null, note: 'synthetic 12% real return' },
+    median: { ...synParam(0.02), note: 'synthetic 2% real return' },
+    top10: { ...synParam(0.04), note: 'synthetic 4% real return' },
+    top1: { ...synParam(0.07), note: 'synthetic 7% real return' },
+    top01: { ...synParam(0.12), note: 'synthetic 12% real return' },
   },
-  dragStrength: { value: 0.30, basis: 'real' as const, source: null, note: 'synthetic drag coefficient' },
+  dragStrength: { ...synParam(0.30), note: 'synthetic drag coefficient' },
   horizon: 5,
   distributionEvolution: 'endogenous' as const,
-  savings: { value: 1_000, basis: 'real' as const, source: null, note: 'synthetic annual savings' },
+  savings: { ...synParam(1_000), note: 'synthetic annual savings' },
 };
 
 const FIXTURE_INPUTS = {
@@ -290,7 +290,7 @@ describe('MODEL-03 + MODEL-04: Multi-tier hand-derived fixture (drag ON)', () =>
   // analytic annuity formula within the standard annuity tolerance (<1e-9).
   // This confirms the fixture params themselves are correct (not the engine's drag logic).
   it('fixture drag-off baseline: dragStrength=0 collapses each tier to analytic annuity (<1e-9)', () => {
-    const params0 = { ...FIXTURE_PARAMS, dragStrength: { value: 0, basis: 'real' as const, source: null } };
+    const params0 = { ...FIXTURE_PARAMS, dragStrength: synParam(0) };
     const result0 = projectionEngine(FIXTURE_INPUTS, params0);
     const snap5 = result0.series.at(-1)!;
 

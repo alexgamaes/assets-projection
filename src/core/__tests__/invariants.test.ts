@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { projectionEngine } from '../engine.js';
-import { analyticOrdinaryAnnuity, relErr, makeSyntheticParams, syntheticInputs } from './testUtils.js';
+import { analyticOrdinaryAnnuity, relErr, makeSyntheticParams, synParam, syntheticInputs } from './testUtils.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -89,7 +89,7 @@ describe('MODEL-04 invariants (drag coupling)', () => {
   // Any double-counting of drag would break this invariant.
   it('dragStrength=0 collapses each tier to the independent analytic ordinary-annuity baseline (<1e-9 relErr)', () => {
     // Use default 60-year horizon so any FP drift is caught too
-    const params = makeSyntheticParams({ dragStrength: { value: 0, basis: 'real', source: null } });
+    const params = makeSyntheticParams({ dragStrength: synParam(0) });
     const result = projectionEngine(syntheticInputs, params);
     const finalSnap = result.series.at(-1)!;
 
@@ -127,8 +127,8 @@ describe('MODEL-04 invariants (drag coupling)', () => {
     // 5-year horizon to keep numbers readable (same anchor + return params as default)
     const baseParams = makeSyntheticParams({ horizon: 5 });
 
-    const params03 = { ...baseParams, dragStrength: { value: 0.30, basis: 'real' as const, source: null } };
-    const params06 = { ...baseParams, dragStrength: { value: 0.60, basis: 'real' as const, source: null } };
+    const params03 = { ...baseParams, dragStrength: synParam(0.30) };
+    const params06 = { ...baseParams, dragStrength: synParam(0.60) };
 
     const result03 = projectionEngine(syntheticInputs, params03);
     const result06 = projectionEngine(syntheticInputs, params06);
@@ -191,7 +191,7 @@ describe('MODEL-04 invariants (drag coupling)', () => {
     for (const drag of [0.1, 0.2, 0.3]) {
       const params = makeSyntheticParams({
         horizon,
-        dragStrength: { value: drag, basis: 'real', source: null },
+        dragStrength: synParam(drag),
       });
       const result = projectionEngine(syntheticInputs, params);
 

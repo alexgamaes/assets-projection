@@ -16,7 +16,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { projectionEngine } from '../engine.js';
-import { analyticOrdinaryAnnuity, relErr, makeSyntheticParams, syntheticInputs } from './testUtils.js';
+import { analyticOrdinaryAnnuity, relErr, makeSyntheticParams, synParam, syntheticInputs } from './testUtils.js';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -51,7 +51,7 @@ describe('MODEL-06: Numerical stability over 60-year horizon', () => {
   // textbook W0*(1+r)^n + S*((1+r)^n − 1)/r formula from testUtils.ts.
   it('engine single-tier output stays within relErr < 1e-9 of analyticOrdinaryAnnuity at sampled years (D-11)', () => {
     const params = makeSyntheticParams({
-      dragStrength: { value: 0, basis: 'real', source: null },
+      dragStrength: synParam(0),
       horizon: 60,
     });
     const result = projectionEngine(syntheticInputs, params);
@@ -106,7 +106,7 @@ describe('MODEL-06: Numerical stability over 60-year horizon', () => {
   it('drag subtraction r_eff = r - assetInflation does not produce catastrophic cancellation at 60 years', () => {
     // dragStrength=0: assetInflation=0 → r_eff = r − 0; any loop FP accumulation visible here
     const paramsDrag0 = makeSyntheticParams({
-      dragStrength: { value: 0, basis: 'real', source: null },
+      dragStrength: synParam(0),
       horizon: 60,
     });
     const result0 = projectionEngine(syntheticInputs, paramsDrag0);
@@ -135,11 +135,11 @@ describe('MODEL-06: Numerical stability over 60-year horizon', () => {
     const horizon = 10;
     const params0 = makeSyntheticParams({
       horizon,
-      dragStrength: { value: 0, basis: 'real', source: null },
+      dragStrength: synParam(0),
     });
     const params5 = makeSyntheticParams({
       horizon,
-      dragStrength: { value: 0.5, basis: 'real', source: null },
+      dragStrength: synParam(0.5),
     });
 
     const result0 = projectionEngine(syntheticInputs, params0);

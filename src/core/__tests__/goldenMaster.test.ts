@@ -14,6 +14,7 @@ import {
   analyticOrdinaryAnnuity,
   relErr,
   makeSyntheticParams,
+  synParam,
   syntheticInputs,
 } from './testUtils.js';
 
@@ -24,7 +25,7 @@ import {
 /** Build params with dragStrength=0 (drag off) and a specific horizon. */
 function dragOffParams(horizon: number) {
   return makeSyntheticParams({
-    dragStrength: { value: 0, basis: 'real', source: null, note: 'drag off' },
+    dragStrength: { ...synParam(0), note: 'drag off' },
     horizon,
   });
 }
@@ -78,13 +79,13 @@ describe('MODEL-06: Golden master (drag-off single-tier vs analytic annuity)', (
 
   it('r=0 branch: drag-off single tier with zero return matches analyticOrdinaryAnnuity(W0, 0, S, n)', () => {
     const params = makeSyntheticParams({
-      dragStrength: { value: 0, basis: 'real', source: null },
+      dragStrength: synParam(0),
       horizon: 20,
       returnByTier: {
-        median: { value: 0, basis: 'real', source: null, note: 'zero return r=0 test' },
-        top10: { value: 0, basis: 'real', source: null },
-        top1: { value: 0, basis: 'real', source: null },
-        top01: { value: 0, basis: 'real', source: null },
+        median: { ...synParam(0), note: 'zero return r=0 test' },
+        top10: synParam(0),
+        top1: synParam(0),
+        top01: synParam(0),
       },
     });
     const result = projectionEngine(syntheticInputs, params);
@@ -173,10 +174,10 @@ describe('MODEL-06: Golden master (drag-off single-tier vs analytic annuity)', (
   it('projectionEngine throws /Basis violation/ when a returnByTier param has basis nominal', () => {
     const bad = makeSyntheticParams({
       returnByTier: {
-        median: { value: 0.02, basis: 'nominal', source: null },
-        top10: { value: 0.04, basis: 'real', source: null },
-        top1: { value: 0.07, basis: 'real', source: null },
-        top01: { value: 0.12, basis: 'real', source: null },
+        median: synParam(0.02, 'nominal'),
+        top10: synParam(0.04),
+        top1: synParam(0.07),
+        top01: synParam(0.12),
       },
     });
     expect(() => projectionEngine(syntheticInputs, bad)).toThrow(/Basis violation/);

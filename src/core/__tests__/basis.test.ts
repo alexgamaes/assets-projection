@@ -21,7 +21,7 @@
 import { describe, it, expect } from 'vitest';
 import { assertReal } from '../types.js';
 import { projectionEngine } from '../engine.js';
-import { makeSyntheticParams, syntheticInputs } from './testUtils.js';
+import { makeSyntheticParams, synParam, syntheticInputs } from './testUtils.js';
 
 describe('Basis invariant (MODEL-05)', () => {
   it('assertReal throws "Basis violation" when basis is nominal', () => {
@@ -45,10 +45,10 @@ describe('Basis invariant (MODEL-05)', () => {
     const params = makeSyntheticParams({
       returnByTier: {
         // Deliberately nominal-tagged — this must cause an immediate throw at the engine boundary
-        median: { value: 0.05, basis: 'nominal', source: null, note: 'intentionally nominal for basis test' },
-        top10: { value: 0.04, basis: 'real', source: null },
-        top1: { value: 0.07, basis: 'real', source: null },
-        top01: { value: 0.12, basis: 'real', source: null },
+        median: { ...synParam(0.05, 'nominal'), note: 'intentionally nominal for basis test' },
+        top10: synParam(0.04),
+        top1: synParam(0.07),
+        top01: synParam(0.12),
       },
     });
 
@@ -57,7 +57,7 @@ describe('Basis invariant (MODEL-05)', () => {
 
   it('projectionEngine throws /Basis violation/ when savings has basis=nominal', () => {
     const params = makeSyntheticParams({
-      savings: { value: 1_000, basis: 'nominal', source: null, note: 'intentionally nominal for basis test' },
+      savings: { ...synParam(1_000, 'nominal'), note: 'intentionally nominal for basis test' },
     });
 
     expect(() => projectionEngine(syntheticInputs, params)).toThrow(/Basis violation/);

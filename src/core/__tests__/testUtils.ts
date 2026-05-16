@@ -5,14 +5,14 @@
  *   - relErr: the ONE documented relative-error helper (D-11 criterion: relErr < 1e-9)
  *   - analyticOrdinaryAnnuity: independent textbook closed form (MUST NOT import engine code)
  *   - DIST_TOL: documented tolerance for distribution-math tests (RESEARCH Open Question 2)
- *   - makeSyntheticParams: synthetic round-number Params builder (source:null placeholders)
+ *   - makeSyntheticParams: synthetic round-number Params builder (synthetic SourceRecord placeholders per D-12)
  *   - syntheticInputs: obviously-synthetic Inputs fixture
  *
  * PITFALLS compliance:
  *   P2 — no hardcoded "18" anywhere (Fagereng "~18pp" gap is a Phase 2 concern; synthetic
  *         anchors use obviously-round values).
  */
-import type { Inputs, Params, SourcedParam } from '../types.js';
+import type { Inputs, Params, SourceRecord, SourcedParam } from '../types.js';
 
 // ---------------------------------------------------------------------------
 // Tolerance constants
@@ -81,9 +81,28 @@ export function analyticOrdinaryAnnuity(W0: number, r: number, S: number, n: num
 // Synthetic fixture helpers
 // ---------------------------------------------------------------------------
 
-/** Helper to build a synthetic SourcedParam (source:null = synthetic placeholder). */
-function synParam(value: number, basis: 'real' | 'nominal' = 'real', note?: string): SourcedParam {
-  return { value, basis, source: null, note };
+/**
+ * A synthetic-but-type-valid SourceRecord for use in test fixtures (D-12 compliant).
+ *
+ * The type no longer allows null (D-10); D-12 permits synthetic citations in fixtures —
+ * the Wave D sourcing-completeness gate targets only the production module (src/data/defaults.ts),
+ * not the test fixture tree. These values are obviously synthetic (no real paper uses
+ * "synthetic" as sourceName); they satisfy the SourceRecord shape without being real citations.
+ *
+ * PITFALLS P2: no literal "18" in any string below.
+ */
+export const SYNTH_SOURCE_RECORD = {
+  sourceName: 'synthetic',
+  figureUsed: 'synthetic fixture value',
+  basis: 'real' as const,
+  definition: 'synthetic test fixture — not a real citation',
+  yearVintage: 'n/a (synthetic)',
+  retrievedDate: 'n/a (synthetic)',
+} as const;
+
+/** Helper to build a synthetic SourcedParam with a synthetic-but-type-valid SourceRecord. */
+export function synParam(value: number, basis: 'real' | 'nominal' = 'real', note?: string): SourcedParam {
+  return { value, basis, source: { ...SYNTH_SOURCE_RECORD, basis }, note };
 }
 
 /**
