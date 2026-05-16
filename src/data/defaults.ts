@@ -319,26 +319,34 @@ export const DEFAULTS: Params = Object.freeze({
   // freeze the back-solved constant and update this value.
   // -------------------------------------------------------------------------
   dragStrength: Object.freeze({
-    value: 0.0, // PROVISIONAL — see note; Plan 04 back-solves this value
+    // D-07/D-08: back-solved constant. Derived by running the engine over the calibrated
+    // DEFAULTS as a 2000–2021-like baseline and bisect-solving for the dragStrength such
+    // that the model's cumulative asset-inflation share of net-worth growth ≈ McKinsey ~80%.
+    // See calibration.test.ts (Plan 04) for the reproducible back-solve procedure.
+    // The ~1.3× asset/GDP ratio is explicitly NOT the calibration target (D-08 exclusion).
+    // Formula for share: Σ_year[totalAnchorWealth(year-1) × assetInflation(year)] /
+    //                    (totalAnchorWealth(horizon) − totalAnchorWealth(0))
+    value: 0.4325757739, // back-solved from McKinsey ~80% target (D-07/D-08)
     basis: 'real' as const,
     source: Object.freeze({
       ...SOURCES.mckinsey2023,
       figureUsed:
         'McKinsey ~80% asset-inflation share of 2000–2021 net-worth growth ' +
-        '(calibration target for back-solve, not the value itself)',
+        '(back-solve target; ~1/5 from new saving/investment) — NOT the ~1.3× asset/GDP ratio (D-08)',
       note:
-        'D-07/D-08 BACK-SOLVE PLACEHOLDER: this value (0.0) is provisional. ' +
-        'The actual dragStrength is derived in calibration.test.ts (Plan 04) by ' +
-        'running the engine over a 2000–2021-like baseline with the calibrated ' +
-        'DEFAULTS anchors/returns and bisect-solving for dragStrength such that ' +
-        'the model\'s asset-inflation share of net-worth growth ≈ McKinsey ~80%. ' +
-        'The ~1.3× asset/GDP ratio is explicitly NOT the calibration target (D-08). ' +
-        'At dragStrength=0 (this placeholder), the model reduces to independent ' +
-        'per-tier compounding (D-09 invariant: drag=0 collapses to baseline). ' +
-        'Plan 04 will freeze the back-solved constant here and add the D-09 ' +
-        'non-conservation re-assertion on real defaults. ' +
-        'McKinsey citation: ~80% of 2000–2021 advanced-economy net-worth growth ' +
-        'from asset-price inflation; ~1/5 from new saving/investment.',
+        'D-07/D-08 BACK-SOLVED VALUE: this constant (0.4325757739) was derived by ' +
+        'running projectionEngine on the calibrated DEFAULTS (anchors, returnByTier, savings, ' +
+        'horizon=35 — the 2000–2021-like baseline, O-2) and bisect-solving for dragStrength ' +
+        'such that the model\'s asset-inflation share of net-worth growth ≈ 0.80. ' +
+        'Share formula (O-1, D-08): ' +
+        'Σ_year[totalAnchorWealth(year-1) × assetInflation(year)] / ' +
+        '(totalAnchorWealth(horizon) − totalAnchorWealth(0)). ' +
+        'This maps to McKinsey "share of net-worth growth from asset-price inflation" ' +
+        '(~80% for 2000–2021 advanced economies; ~1/5 from new saving/investment). ' +
+        'The ~1.3× asset/GDP ratio is explicitly NOT the calibration target (D-08 exclusion). ' +
+        'Reproducible: calibration.test.ts back-solves this value and asserts ' +
+        'assetInflationShare(0.4325757739) ≈ 0.80 and value ≈ solved to 4 decimal places. ' +
+        'McKinsey source: "The rise and rise of the global balance sheet" (2021).',
     }),
   }),
 
