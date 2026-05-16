@@ -84,13 +84,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| MODEL-01 | Phase 1 | Pending |
+| MODEL-02 | Phase 1 | Pending |
+| MODEL-03 | Phase 1 | Pending |
+| MODEL-04 | Phase 1 | Pending |
+| MODEL-05 | Phase 1 | Pending |
+| MODEL-06 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| DATA-04 | Phase 2 | Pending |
+| VIZ-01 | Phase 3 | Pending |
+| VIZ-02 | Phase 3 | Pending |
+| VIZ-03 | Phase 3 | Pending |
+| VIZ-04 | Phase 3 | Pending |
+| VIZ-05 | Phase 3 | Pending |
+| VIZ-06 | Phase 3 | Pending |
+| NEUT-01 | Phase 3 | Pending |
+| ENTRY-01 | Phase 4 | Pending |
+| ENTRY-02 | Phase 4 | Pending |
+| ENTRY-03 | Phase 4 | Pending |
+| ENTRY-04 | Phase 4 | Pending |
+| ENTRY-05 | Phase 4 | Pending |
+| ENTRY-06 | Phase 4 | Pending |
+| NEUT-02 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 26 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 26 ⚠️
+- Mapped to phases: 26 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-15*
-*Last updated: 2026-05-15 after initial definition*
+*Last updated: 2026-05-15 after roadmap creation (traceability populated)*
