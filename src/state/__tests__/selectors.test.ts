@@ -123,21 +123,71 @@ describe('VIZ-04: selectDivergenceOption', () => {
     expect(series).toHaveLength(5);
   });
 
-  it('first series (user) uses the teal-700 color', () => {
+  it('first series (user) uses the teal-700 color #0F766E', () => {
     const option = selectDivergenceOption(result, 'value');
     const series = option.series as Array<{ lineStyle?: { color: string } }>;
     const userSeries = series[0];
-    // TODO (Plan 02): assert exact COLORS.user value '#0F766E'
     expect(userSeries).toBeDefined();
     expect(userSeries?.lineStyle?.color).toBe('#0F766E');
   });
 
-  it('series names include expected tier labels', () => {
+  it('second series (median) uses the slate-500 color #64748B', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const series = option.series as Array<{ lineStyle?: { color: string } }>;
+    expect(series[1]?.lineStyle?.color).toBe('#64748B');
+  });
+
+  it('series names match exact UI-SPEC labels with p50/p90/p99/p99.9 suffixes', () => {
     const option = selectDivergenceOption(result, 'value');
     const series = option.series as Array<{ name: string }>;
     const names = series.map((s) => s.name);
-    // TODO (Plan 02): assert exact series names from UI-SPEC
-    expect(names).toContain('Your wealth');
+    expect(names).toEqual([
+      'Your wealth',
+      'Median (p50)',
+      'Top 10% (p90)',
+      'Top 1% (p99)',
+      'Top 0.1% (p99.9)',
+    ]);
+  });
+
+  it('log mode: yAxis.type is "log" and min is 1', () => {
+    const option = selectDivergenceOption(result, 'log');
+    const yAxis = option.yAxis as { type: string; min?: number };
+    expect(yAxis.type).toBe('log');
+    expect(yAxis.min).toBe(1);
+  });
+
+  it('value mode: yAxis.type is "value" and min is undefined', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const yAxis = option.yAxis as { type: string; min?: number };
+    expect(yAxis.type).toBe('value');
+    expect(yAxis.min).toBeUndefined();
+  });
+
+  it('has legend with show:true', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const legend = option.legend as { show: boolean } | undefined;
+    expect(legend?.show).toBe(true);
+  });
+
+  it('all series have showSymbol:false', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const series = option.series as Array<{ showSymbol?: boolean }>;
+    for (const s of series) {
+      expect(s.showSymbol).toBe(false);
+    }
+  });
+
+  it('divergence tooltip formatter returns a string with rank and tier info', () => {
+    const option = selectDivergenceOption(result, 'value');
+    const tooltip = option.tooltip as { formatter?: (params: unknown[]) => string };
+    const formatter = tooltip.formatter!;
+    expect(typeof formatter).toBe('function');
+    const fakeParams = [{ dataIndex: 0, value: [params.horizon, 120000], seriesName: 'Your wealth', color: '#0F766E' }];
+    const output = formatter(fakeParams);
+    expect(typeof output).toBe('string');
+    expect(output.toLowerCase()).toMatch(/rank/);
+    expect(output.toLowerCase()).toMatch(/tier|top|median/);
   });
 });
 
@@ -148,7 +198,6 @@ describe('VIZ-04: selectDivergenceOption', () => {
 describe('VIZ-05: selectRelPosOption', () => {
   it('returns EChartsOption with series data from relativePosition', () => {
     const option = selectRelPosOption(result);
-    // TODO (Plan 02): assert series[0].data values match result.relativePosition[].userRank
     expect(option.series).toBeDefined();
     expect(Array.isArray(option.series)).toBe(true);
   });
@@ -159,7 +208,16 @@ describe('VIZ-05: selectRelPosOption', () => {
     expect(series[0]?.data?.length).toBe(result.relativePosition.length);
   });
 
-  it('series has markLine with 4 tier-threshold entries at 50/90/99/99.9', () => {
+  it('series[0].data[0][1] equals relativePosition[0].userRank (not re-multiplied — RESEARCH.md Pitfall 6)', () => {
+    const option = selectRelPosOption(result);
+    const series = option.series as Array<{ data: [number, number][] }>;
+    const firstPoint = series[0]?.data[0];
+    expect(firstPoint).toBeDefined();
+    // userRank is already 0–100 — must NOT multiply by 100 again
+    expect(firstPoint![1]).toBe(result.relativePosition[0]!.userRank);
+  });
+
+  it('series has markLine with exactly 4 tier-threshold entries', () => {
     const option = selectRelPosOption(result);
     const series = option.series as Array<{
       markLine?: { data: Array<{ yAxis: number; name: string }> };
@@ -167,12 +225,42 @@ describe('VIZ-05: selectRelPosOption', () => {
     const markLineData = series[0]?.markLine?.data;
     expect(markLineData).toBeDefined();
     expect(markLineData).toHaveLength(4);
-    // D-10: tier thresholds at p50/p90/p99/p99.9
-    const yAxes = markLineData?.map((d) => d.yAxis) ?? [];
-    expect(yAxes).toContain(50);
-    expect(yAxes).toContain(90);
-    expect(yAxes).toContain(99);
-    expect(yAxes).toContain(99.9);
+  });
+
+  it('markLine entries have yAxis values 50, 90, 99, 99.9 in that order (D-10)', () => {
+    const option = selectRelPosOption(result);
+    const series = option.series as Array<{
+      markLine?: { data: Array<{ yAxis: number }> };
+    }>;
+    const yAxes = series[0]?.markLine?.data.map((d) => d.yAxis) ?? [];
+    expect(yAxes).toEqual([50, 90, 99, 99.9]);
+  });
+
+  it('yAxis.type is always "value" (linear — D-07/D-09: no toggle on Chart 3)', () => {
+    const option = selectRelPosOption(result);
+    const yAxis = option.yAxis as { type: string };
+    expect(yAxis.type).toBe('value');
+  });
+
+  it('yAxis has min:0, max:100, name "Percentile rank (0–100)"', () => {
+    const option = selectRelPosOption(result);
+    const yAxis = option.yAxis as { type: string; min?: number; max?: number; name?: string };
+    expect(yAxis.min).toBe(0);
+    expect(yAxis.max).toBe(100);
+    expect(yAxis.name).toBe('Percentile rank (0–100)');
+  });
+
+  it('relPos tooltip formatter pairs rank with real wealth (D-11 safeguard)', () => {
+    const option = selectRelPosOption(result);
+    const tooltip = option.tooltip as { formatter?: (params: unknown[]) => string };
+    const formatter = tooltip.formatter!;
+    expect(typeof formatter).toBe('function');
+    const fakeParams = [{ dataIndex: 0, value: [result.relativePosition[0]!.year, result.relativePosition[0]!.userRank], seriesName: 'Your rank', color: '#0F766E' }];
+    const output = formatter(fakeParams);
+    expect(typeof output).toBe('string');
+    // Must contain "Rank" and "Real wealth" (D-11 tooltip safeguard)
+    expect(output).toMatch(/Rank/);
+    expect(output).toMatch(/Real wealth/);
   });
 });
 
@@ -199,7 +287,6 @@ describe('VIZ-06: selectCitationFooter', () => {
     const citations = selectCitationFooter(SOURCES);
     // SOURCES has fagereng, bach, saezZucman, jst, mckinsey
     expect(citations.length).toBe(Object.keys(SOURCES).length);
-    // TODO (Plan 02): assert exact source names match SOURCES registry keys
   });
 });
 
