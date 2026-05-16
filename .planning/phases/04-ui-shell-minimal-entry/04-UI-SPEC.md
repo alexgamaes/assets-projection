@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: ui-shell-minimal-entry
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-16
+reviewed_at: 2026-05-16
 ---
 
 # Phase 4 — UI Design Contract
@@ -180,11 +181,11 @@ Prescriptive contract for the executor. Phase 4 adds **controls and layout only*
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-16
