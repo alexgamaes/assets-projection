@@ -222,6 +222,63 @@ export const SOURCES = {
       'The figure in defaults.ts is provisional until Plan 04 completes the back-solve.',
     url: 'https://www.mckinsey.com/mgi/our-research/out-of-balance-whats-next-for-growth-wealth-and-debt',
   } satisfies SourceRecord,
+
+  /**
+   * Federal Reserve Board — Survey of Consumer Finances 2022 (SCF 2022).
+   *
+   * D-02 / ENTRY-01: UX seed default for the two-input entry experience.
+   * US median family net worth = $192,900 (2022 survey dollars, published September 2023).
+   * Rounded up to $200,000 as a representative UX starting point (D-02).
+   *
+   * This is a UX default, not a DATA-04-scoped empirical model parameter.
+   */
+  scf2022: {
+    sourceName: 'Federal Reserve Board — Survey of Consumer Finances 2022 (SCF 2022)',
+    figureUsed: 'Median family net worth $192,900 (2022 survey dollars)',
+    basis: 'real' as const,
+    definition:
+      'US median family net worth; all families, 2022 survey; nominal 2022 dollars; ' +
+      'rounded up to $200,000 as a UX seed default per D-02',
+    yearVintage: '2022 survey data (published September 2023)',
+    retrievedDate: '2026-05-16',
+    note:
+      'UX default seed for current wealth entry; not a calibrated model parameter ' +
+      '(DATA-04 does not apply). SCF 2022 median family net worth = $192,900; ' +
+      'rounded up to $200,000 for the two-input start experience (D-02). ' +
+      'Source: federalreserve.gov/publications/files/scf23.pdf Table 2.',
+    url: 'https://www.federalreserve.gov/publications/files/scf23.pdf',
+  } satisfies SourceRecord,
+
+  /**
+   * US Bureau of Labor Statistics — CPI-U long-run geometric mean (1926–2022).
+   *
+   * D-07 / ENTRY-04 (selectReinflated): fixed display-only inflation rate for the
+   * nominal re-inflation selector. Not a user control (v1); v2 CONFIG-01 may expose it.
+   *
+   * Long-run CPI-U geometric mean ~2.9% (1926–2022); using 2.5% as a slightly
+   * conservative anchor reflecting the post-1990 disinflationary period.
+   */
+  blsCpiLongRun: {
+    sourceName: 'US Bureau of Labor Statistics — CPI-U long-run geometric mean (1926–2022)',
+    figureUsed:
+      'Long-run geometric mean annual CPI-U change approximately 2.9% (1926–2022) — ' +
+      'rounded to 2.5% as a conservative long-run anchor',
+    basis: 'nominal' as const,
+    definition:
+      'US Consumer Price Index for All Urban Consumers (CPI-U, all items); ' +
+      'long-run geometric average annual rate 1926–2022; ' +
+      'fixed display-only rate for nominal re-inflation selector (D-07); ' +
+      'not a user control (v2 CONFIG-01)',
+    yearVintage: '1926–2022 long-run average',
+    retrievedDate: '2026-05-16',
+    note:
+      'UX display default for nominal re-inflation (D-07 / selectReinflated); fixed for v1. ' +
+      'Long-run CPI-U geometric mean ~2.9% (1926–2022); using 2.5% as a slightly conservative ' +
+      'anchor that better reflects the post-1990 disinflationary period while remaining ' +
+      'well-cited. Source: BLS CPI data series CUUR0000SA0. ' +
+      'Money-illusion caption (D-09) cites this rate and source name.',
+    url: 'https://www.bls.gov/cpi/data.htm',
+  } satisfies SourceRecord,
 } as const;
 
 export type SourcesRegistry = typeof SOURCES;
