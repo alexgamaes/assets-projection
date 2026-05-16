@@ -97,7 +97,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Selector layer (VIZ-01/02/03) + TimeSeriesChart + LogLinearToggle + HarnessPage (Chart 1 visible)
+- [x] 03-02-PLAN.md — Selector layer (VIZ-01/02/03) + TimeSeriesChart + LogLinearToggle + HarnessPage (Chart 1 visible)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -145,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
-| 3. Selectors, Visualization & Neutrality Style Guide | 1/3 | In Progress|  |
+| 3. Selectors, Visualization & Neutrality Style Guide | 2/3 | In Progress|  |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
