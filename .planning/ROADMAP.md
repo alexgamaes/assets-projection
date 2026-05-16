@@ -93,7 +93,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Scaffold: replace package.json, vite.config.ts, tsconfig JSX, Zustand store, selector test stubs
+- [x] 03-01-PLAN.md — Scaffold: replace package.json, vite.config.ts, tsconfig JSX, Zustand store, selector test stubs
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -145,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
-| 3. Selectors, Visualization & Neutrality Style Guide | 0/3 | Not started | - |
+| 3. Selectors, Visualization & Neutrality Style Guide | 1/3 | In Progress|  |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
