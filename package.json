@@ -1,0 +1,17 @@
+{
+  "name": "assets-projection-core",
+  "version": "0.0.1",
+  "description": "Pure numerical wealth projection engine — framework-free core",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "3.2.4",
+    "tsx": "4.22.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}
