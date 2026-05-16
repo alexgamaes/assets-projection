@@ -111,9 +111,10 @@ export function selectTimeSeriesOption(
           s.year,
           yAxisType === 'log' ? Math.max(1, s.userWealth) : s.userWealth,
         ]),
-        lineStyle: { color: COLORS.user, width: 2 },
+        lineStyle: { color: COLORS.user, width: 3.5 },
         itemStyle: { color: COLORS.user },
         showSymbol: false,
+        endLabel: { show: true, formatter: () => 'You', color: COLORS.user, fontSize: 12, fontWeight: 600 },
       },
     ],
   };
@@ -185,9 +186,10 @@ export function selectDivergenceOption(
           s.year,
           yAxisType === 'log' ? Math.max(1, s.userWealth) : s.userWealth,
         ]),
-        lineStyle: { color: COLORS.user, width: 2 },
+        lineStyle: { color: COLORS.user, width: 3.5 },
         itemStyle: { color: COLORS.user },
         showSymbol: false,
+        endLabel: { show: true, formatter: () => 'You', color: COLORS.user, fontSize: 12, fontWeight: 600 },
       },
       {
         type: 'line',
@@ -300,9 +302,10 @@ export function selectRelPosOption(result: ProjectionResult): EChartsOption {
         name: 'Your rank',
         // NOTE: userRank is already 0–100 (RESEARCH.md Pitfall 6 — do NOT re-multiply)
         data: result.relativePosition.map((rp) => [rp.year, rp.userRank]),
-        lineStyle: { color: COLORS.user, width: 2 },
+        lineStyle: { color: COLORS.user, width: 3.5 },
         itemStyle: { color: COLORS.user },
         showSymbol: false,
+        endLabel: { show: true, formatter: () => 'You', color: COLORS.user, fontSize: 12, fontWeight: 600 },
         markLine: {
           silent: true,
           symbol: 'none',
