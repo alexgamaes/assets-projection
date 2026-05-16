@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Model Foundation** - Pure, deterministic, unit-tested projection engine with the nominal/real basis and non-conservation invariants baked in (completed 2026-05-16)
 - [x] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature (completed 2026-05-16)
 - [x] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact (completed 2026-05-16)
-- [ ] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout
+- [x] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout (completed 2026-05-16)
 - [ ] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide
 
 ## Phase Details
@@ -125,11 +125,11 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 04-02-PLAN.md — selectReinflated + selectSummary selectors + LogSliderInput, HorizonSlider, BasisToggle, SummaryReadout UI primitives
+- [x] 04-02-PLAN.md — selectReinflated + selectSummary selectors + LogSliderInput, HorizonSlider, BasisToggle, SummaryReadout UI primitives
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
+- [x] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
 
 ### Phase 5: Neutrality Review & Release Readiness
 
@@ -157,5 +157,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
-| 4. UI Shell & Minimal Entry | 1/3 | In Progress|  |
+| 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
