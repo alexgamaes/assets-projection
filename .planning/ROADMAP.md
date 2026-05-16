@@ -121,7 +121,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Wave-0 test stubs + cited seed defaults (seedWealth, inflationRate) + Zustand store actions (setInputs/setHorizon/setBasis)
+- [x] 04-01-PLAN.md — Wave-0 test stubs + cited seed defaults (seedWealth, inflationRate) + Zustand store actions (setInputs/setHorizon/setBasis)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -157,5 +157,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
 | 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
-| 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
+| 4. UI Shell & Minimal Entry | 1/3 | In Progress|  |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
