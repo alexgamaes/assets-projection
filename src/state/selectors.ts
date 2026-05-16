@@ -1,5 +1,6 @@
 // Source: RESEARCH.md §"Pattern 1: Selector Function" and §"Pattern Map"
 // Plan 02 fills in full EChartsOption construction for VIZ-01/02/03.
+// Plan 03 fills in full implementations for VIZ-04/05/06.
 import type { EChartsOption } from 'echarts';
 import type { CallbackDataParams } from 'echarts/types/dist/shared.js';
 import type { ProjectionResult, SourceRecord } from '../core/types.js';
@@ -124,7 +125,8 @@ export function selectTimeSeriesOption(
 
 /**
  * selectDivergenceOption — maps ProjectionResult to EChartsOption for Chart 2.
- * VIZ-03: hover tooltips; VIZ-04: multi-tier overlay with all 5 series.
+ * VIZ-04: multi-tier overlay with all 5 series (user + 4 tier anchors).
+ * D-08: combined tooltip shows all 5 series wealth values + rank + tier.
  * T-03-04: log axis zero-guard applied to all 5 series.
  * T-03-03: tooltip strings built only from numeric model output.
  */
@@ -151,9 +153,14 @@ export function selectDivergenceOption(
         formatter: (v: number) => formatWealth(v),
       },
     },
+    legend: {
+      show: true,
+      textStyle: { fontSize: 14, fontWeight: 400 },
+    },
     tooltip: {
       trigger: 'axis',
       confine: true,
+      // D-08: combined tooltip — all 5 series wealth + rank + tier (T-03-03)
       formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
         const paramsArr = Array.isArray(params) ? params : [params];
         if (!paramsArr.length) return '';
@@ -161,11 +168,13 @@ export function selectDivergenceOption(
         const snap = result.series[dataIndex];
         const relPos = result.relativePosition[dataIndex];
         if (!snap || !relPos) return '';
+        const tier = deriveTier(snap.userPercentile);
+        const header = `Year ${snap.year} · Rank: ${relPos.userRank.toFixed(1)}th · Tier: ${tier}`;
         const lines = paramsArr.map((p) => {
           const val = Array.isArray(p.value) ? (p.value as number[])[1] ?? 0 : (p.value as number) ?? 0;
-          return `${p.seriesName}: ${formatWealth(val)}`;
+          return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color ?? ''};margin-right:4px;"></span>${p.seriesName ?? ''}: ${formatWealth(val)}`;
         });
-        return `Year ${snap.year} · Rank: ${relPos.userRank.toFixed(1)}th<br/>${lines.join('<br/>')}`;
+        return `${header}<br/>${lines.join('<br/>')}`;
       },
     },
     series: [
@@ -176,56 +185,61 @@ export function selectDivergenceOption(
           s.year,
           yAxisType === 'log' ? Math.max(1, s.userWealth) : s.userWealth,
         ]),
-        lineStyle: { color: COLORS.user },
+        lineStyle: { color: COLORS.user, width: 2 },
         itemStyle: { color: COLORS.user },
+        showSymbol: false,
       },
       {
         type: 'line',
-        name: 'Median',
+        name: 'Median (p50)',
         data: result.series.map((s) => [
           s.year,
           yAxisType === 'log'
             ? Math.max(1, s.anchorWealth.median)
             : s.anchorWealth.median,
         ]),
-        lineStyle: { color: COLORS.median },
+        lineStyle: { color: COLORS.median, width: 2 },
         itemStyle: { color: COLORS.median },
+        showSymbol: false,
       },
       {
         type: 'line',
-        name: 'Top 10%',
+        name: 'Top 10% (p90)',
         data: result.series.map((s) => [
           s.year,
           yAxisType === 'log'
             ? Math.max(1, s.anchorWealth.top10)
             : s.anchorWealth.top10,
         ]),
-        lineStyle: { color: COLORS.top10 },
+        lineStyle: { color: COLORS.top10, width: 2 },
         itemStyle: { color: COLORS.top10 },
+        showSymbol: false,
       },
       {
         type: 'line',
-        name: 'Top 1%',
+        name: 'Top 1% (p99)',
         data: result.series.map((s) => [
           s.year,
           yAxisType === 'log'
             ? Math.max(1, s.anchorWealth.top1)
             : s.anchorWealth.top1,
         ]),
-        lineStyle: { color: COLORS.top1 },
+        lineStyle: { color: COLORS.top1, width: 2 },
         itemStyle: { color: COLORS.top1 },
+        showSymbol: false,
       },
       {
         type: 'line',
-        name: 'Top 0.1%',
+        name: 'Top 0.1% (p99.9)',
         data: result.series.map((s) => [
           s.year,
           yAxisType === 'log'
             ? Math.max(1, s.anchorWealth.top01)
             : s.anchorWealth.top01,
         ]),
-        lineStyle: { color: COLORS.top01 },
+        lineStyle: { color: COLORS.top01, width: 2 },
         itemStyle: { color: COLORS.top01 },
+        showSymbol: false,
       },
     ],
   };
@@ -238,23 +252,57 @@ export function selectDivergenceOption(
 /**
  * selectRelPosOption — maps ProjectionResult to EChartsOption for Chart 3.
  * VIZ-05: relative-position trajectory; D-09: userRank (0–100), always linear.
- * D-10: tier-threshold markLine reference bands.
- * Plan 02 fills in the full option; this stub returns a valid skeleton.
+ * D-07: yAxis.type is ALWAYS 'value' — the shared log/linear toggle does NOT affect Chart 3.
+ * D-10: tier-threshold markLine reference bands at p50/p90/p99/p99.9.
+ * D-11 tooltip safeguard: pairs rank with real wealth and share in tooltip.
  */
 export function selectRelPosOption(result: ProjectionResult): EChartsOption {
-  // TODO (Plan 02): full EChartsOption with D-10 markLine and D-11 tooltip
   return {
-    xAxis: { type: 'value', name: 'Year' },
-    yAxis: { type: 'value', name: 'Wealth rank (percentile)', min: 0, max: 100 },
-    tooltip: { trigger: 'axis' },
+    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    xAxis: {
+      type: 'value',
+      name: 'Year',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      axisLabel: { fontSize: 14, fontWeight: 400 },
+    },
+    yAxis: {
+      // D-07/D-09: ALWAYS linear — Chart 3 is never affected by the log/linear toggle
+      type: 'value',
+      name: 'Percentile rank (0–100)',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      min: 0,
+      max: 100,
+      axisLabel: { fontSize: 14, fontWeight: 400 },
+    },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      // D-11: tooltip pairs rank with growing real wealth (T-03-03)
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        const paramsArr = Array.isArray(params) ? params : [params];
+        if (!paramsArr.length) return '';
+        const dataIndex = paramsArr[0]!.dataIndex ?? 0;
+        const snap = result.series[dataIndex];
+        const relPos = result.relativePosition[dataIndex];
+        if (!snap || !relPos) return '';
+        const shareStr = (relPos.userShare * 100).toFixed(2) + '%';
+        return (
+          `Year ${relPos.year} · ` +
+          `Rank: ${relPos.userRank.toFixed(1)}th · ` +
+          `Real wealth: ${formatWealth(snap.userWealth)} · ` +
+          `Share of total: ${shareStr}`
+        );
+      },
+    },
     series: [
       {
         type: 'line',
         name: 'Your rank',
-        // NOTE: use relativePosition[].userRank (0–100), NOT series[].userPercentile (0–1)
+        // NOTE: userRank is already 0–100 (RESEARCH.md Pitfall 6 — do NOT re-multiply)
         data: result.relativePosition.map((rp) => [rp.year, rp.userRank]),
-        lineStyle: { color: COLORS.user },
+        lineStyle: { color: COLORS.user, width: 2 },
         itemStyle: { color: COLORS.user },
+        showSymbol: false,
         markLine: {
           silent: true,
           symbol: 'none',
@@ -265,6 +313,7 @@ export function selectRelPosOption(result: ProjectionResult): EChartsOption {
             width: 1,
           },
           label: { fontSize: 12, color: '#94A3B8' },
+          // D-10: tier thresholds at p50/p90/p99/p99.9
           data: [
             { yAxis: 50, name: 'p50' },
             { yAxis: 90, name: 'p90' },
