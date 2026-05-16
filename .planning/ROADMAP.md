@@ -14,7 +14,7 @@ This project delivers a browser-only, correctness-first wealth-projection calcul
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Model Foundation** - Pure, deterministic, unit-tested projection engine with the nominal/real basis and non-conservation invariants baked in (completed 2026-05-16)
-- [ ] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature
+- [x] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature (completed 2026-05-16)
 - [ ] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact
 - [ ] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout
 - [ ] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide
@@ -73,7 +73,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 02-04-PLAN.md — Sourcing-completeness gate + dragStrength back-solve + divergence sanity + D-09 invariant re-run
+- [x] 02-04-PLAN.md — Sourcing-completeness gate + dragStrength back-solve + divergence sanity + D-09 invariant re-run
 
 ### Phase 3: Selectors, Visualization & Neutrality Style Guide
 
@@ -133,7 +133,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
-| 2. Empirical Data & Parameter Calibration | 3/4 | In Progress|  |
+| 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
 | 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
 | 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
