@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Scaffold + branded basis invariant + Wave-0 test skeleton
 - [x] 01-02-PLAN.md — Lognormal+Pareto distribution curve with closed-form top-share (spike)
-- [ ] 01-03-PLAN.md — Engine vertical slice: tiers + scalar drag + loop + golden master
+- [x] 01-03-PLAN.md — Engine vertical slice: tiers + scalar drag + loop + golden master
 - [ ] 01-04-PLAN.md — D-12 invariant battery + hand-derived multi-tier fixture
 
 ### Phase 2: Empirical Data & Parameter Calibration
@@ -99,7 +99,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Model Foundation | 2/4 | In Progress|  |
+| 1. Model Foundation | 3/4 | In Progress|  |
 | 2. Empirical Data & Parameter Calibration | 0/TBD | Not started | - |
 | 3. Selectors, Visualization & Neutrality Style Guide | 0/TBD | Not started | - |
 | 4. UI Shell & Minimal Entry | 0/TBD | Not started | - |
