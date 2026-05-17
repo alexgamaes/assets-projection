@@ -163,7 +163,7 @@ Plans:
 
 ### Phase 5: Neutrality Review & Release Readiness
 
-**Goal**: Every on-screen narrative annotation, label, microcopy string, and chart palette decision shipped in Phases 3 and 4 is reviewed against the neutrality style guide and corrected, so the released tool describes mechanism as fact without assigning blame or virtue.
+**Goal**: Every on-screen narrative annotation, label, microcopy string, and chart palette decision shipped in Phases 3, 4, and 4.1 is reviewed against the neutrality style guide and corrected, so the released tool describes mechanism as fact without assigning blame or virtue. The carried CR-01 D-14 mislabel is fixed and the JST survivorship caveat is surfaced; Phase 5 exits with zero open FAIL rows in `05-NEUT-02-REVIEW.md`.
 **Mode:** mvp
 **Depends on**: Phase 4
 **Requirements**: NEUT-02
@@ -174,7 +174,20 @@ Plans:
   3. The relative-position chart carries a neutral caption clarifying shares can diverge while all wealth still grows (no zero-sum implication)
   4. Long-run-historical defaults surface their survivorship caveat neutrally in the sourcing affordance
 
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — CR-01 fix: realGrowthMultiple field + two-arg selectSummary + AppShell/SummaryReadout wiring + pure D-14 regression test
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 05-02-PLAN.md — Surface the sourced JST survivorship caveat in CitationFooter (criterion 4)
+
+**Wave 3** *(blocked on Wave 1 + Wave 2)*
+
+- [ ] 05-03-PLAN.md — Verbatim-caption equality assertions + exhaustive surface sweep → 05-NEUT-02-REVIEW.md (zero open FAIL rows) + §3 doc drift fix
+
 **UI hint**: yes
 
 ## Progress
@@ -189,4 +202,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
 | 4.1. Tier Share-of-Economy Visualization | 3/3 | Complete   | 2026-05-17 |
-| 5. Neutrality Review & Release Readiness | 0/TBD | Not started | - |
+| 5. Neutrality Review & Release Readiness | 0/3 | Not started | - |
