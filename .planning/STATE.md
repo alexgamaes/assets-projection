@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 4.1 UI-SPEC approved
-last_updated: "2026-05-17T00:11:09.986Z"
+status: ready_to_plan
+stopped_at: Phase 04.1 complete (3/3) — ready to discuss Phase 5
+last_updated: 2026-05-17T05:33:13.628Z
 last_activity: 2026-05-17 -- Phase 04.1 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 17
   percent: 67
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-15)
 
 **Core value:** Make the exponential, distribution-dependent nature of capital returns viscerally clear — using real historical data, presented neutrally — so a person can see both their own trajectory and how their relative position shifts over time.
-**Current focus:** Phase 04.1 — tier-share-of-economy-visualization-at-the-end-of-the-projec
+**Current focus:** Phase 5 — neutrality review & release readiness
 
 ## Current Position
 
-Phase: 04.1 (tier-share-of-economy-visualization-at-the-end-of-the-projec) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 04.1
-Last activity: 2026-05-17 -- Phase 04.1 execution started
+Phase: 5
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-17
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 14
+- Total plans completed: 17
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -48,6 +48,7 @@ Progress: [░░░░░░░░░░] 0%
 | 02 | 4 | - | - |
 | 03 | 3 | - | - |
 | 04 | 3 | - | - |
+| 04.1 | 3 | - | - |
 
 **Recent Trend:**
 
