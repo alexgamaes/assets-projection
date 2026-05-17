@@ -65,7 +65,9 @@ export function selectTimeSeriesOption(
   yAxisType: 'log' | 'value',
 ): EChartsOption {
   return {
-    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    // bottom reserves room for axis labels + bottom-anchored legend (no overlap);
+    // containLabel keeps axis labels inside the grid box.
+    grid: { top: 44, right: 16, bottom: 64, left: 48, containLabel: true },
     xAxis: {
       type: 'value',
       name: 'Year',
@@ -138,7 +140,9 @@ export function selectDivergenceOption(
   yAxisType: 'log' | 'value',
 ): EChartsOption {
   return {
-    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    // bottom reserves room for axis labels + bottom-anchored legend (no overlap);
+    // containLabel keeps axis labels inside the grid box.
+    grid: { top: 44, right: 16, bottom: 64, left: 48, containLabel: true },
     xAxis: {
       type: 'value',
       name: 'Year',
@@ -158,6 +162,7 @@ export function selectDivergenceOption(
     },
     legend: {
       show: true,
+      bottom: 0,
       textStyle: { fontSize: 14, fontWeight: 400 },
     },
     tooltip: {
@@ -262,7 +267,9 @@ export function selectDivergenceOption(
  */
 export function selectRelPosOption(result: ProjectionResult): EChartsOption {
   return {
-    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    // bottom reserves room for axis labels + bottom-anchored legend (no overlap);
+    // containLabel keeps axis labels inside the grid box.
+    grid: { top: 44, right: 16, bottom: 64, left: 48, containLabel: true },
     xAxis: {
       type: 'value',
       name: 'Year',
@@ -441,9 +448,17 @@ export function selectShareOption(
   bandSeries: BandShare[],
   result: ProjectionResult,
 ): EChartsOption {
-  // Helper: build [year, value×100] data array for a band field
-  const bandData = (getter: (b: BandShare) => number): [number, number][] =>
-    bandSeries.map((b) => [b.year, getter(b) * 100]);
+  // ECharts stacking landmine (G1): `stack` is only honored when series share
+  // a CATEGORY axis with plain y-value arrays. Supplying [x, y] pairs on a
+  // `value` x-axis makes ECharts ignore `stack` and draw each area
+  // independently down to zero (the overlapping-triangles render).
+  // Categories are the per-year labels; every series is index-aligned to them.
+  const yearCategories = bandSeries.map((b) => String(b.year));
+
+  // Helper: build plain [value×100] array for a band field, index-aligned to
+  // yearCategories so the 100% stack accumulates correctly.
+  const bandData = (getter: (b: BandShare) => number): number[] =>
+    bandSeries.map((b) => getter(b) * 100);
 
   // Stacked-area band series in D-09 order: poorest at bottom (series[0]), richest at top
   const bandSeriesDefs: Array<{
@@ -459,37 +474,36 @@ export function selectShareOption(
   ];
 
   return {
-    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    // bottom reserves room for the axis labels + the bottom-anchored legend so
+    // they no longer collide; containLabel keeps axis labels inside the grid.
+    grid: { top: 44, right: 16, bottom: 64, left: 48, containLabel: true },
     xAxis: {
-      type: 'value',
+      type: 'category',
+      data: yearCategories,
+      boundaryGap: false,
       name: 'Year',
       nameTextStyle: { fontSize: 14, fontWeight: 400 },
       axisLabel: { fontSize: 14, fontWeight: 400 },
     },
-    // Two-element yAxis array (RESEARCH Pattern 3 Pitfall 1 — hidden-axis landmine):
-    // [0] visible 0–100% axis for band shares; [1] hidden mirror for user line.
-    yAxis: [
-      {
-        type: 'value',
-        min: 0,
-        max: 100,
-        name: 'Share of total wealth (%)',
-        nameTextStyle: { fontSize: 14, fontWeight: 400 },
-        axisLabel: {
-          fontSize: 14,
-          fontWeight: 400,
-          formatter: (v: number) => `${v}%`,
-        },
+    // Single 0–100% share axis. The former hidden second axis existed only for
+    // the user-position line, which has been removed: plotting rank on a
+    // share-of-wealth chart misread as "you own X% of the economy". Rank lives
+    // in Chart 3 (relative position).
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      name: 'Share of total wealth (%)',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      axisLabel: {
+        fontSize: 14,
+        fontWeight: 400,
+        formatter: (v: number) => `${v}%`,
       },
-      {
-        type: 'value',
-        min: 0,
-        max: 100,
-        show: false, // hidden second axis for user-position line (Pitfall 1 mitigation)
-      },
-    ],
+    },
     legend: {
       show: true,
+      bottom: 0,
       data: bandSeriesDefs.map((s) => s.name),
       textStyle: { fontSize: 14, fontWeight: 400 },
     },
@@ -505,7 +519,8 @@ export function selectShareOption(
         if (!snap) return '';
         const year = snap.year;
         const lines = paramsArr.map((p) => {
-          const val = Array.isArray(p.value) ? (p.value as number[])[1] ?? 0 : (p.value as number) ?? 0;
+          // Category-axis series carry plain numeric values (not [x,y] pairs).
+          const val = (p.value as number) ?? 0;
           return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color ?? ''};margin-right:4px;"></span>${p.seriesName ?? ''}: ${val.toFixed(1)}%`;
         });
         return `Year ${year}<br/>${lines.join('<br/>')}`;
@@ -525,24 +540,6 @@ export function selectShareOption(
         showSymbol: false,
         emphasis: { focus: 'series' as const },
       })),
-      // series[5]: user-position line (D-05/D-06 — no band slice, dashed line on hidden axis)
-      {
-        type: 'line' as const,
-        name: 'Your position',
-        yAxisIndex: 1, // hidden second y-axis (Pitfall 1 mitigation)
-        // NO stack key — user line must NOT stack with the band areas
-        data: result.series.map((s) => [s.year, s.userPercentile * 100]),
-        lineStyle: { color: COLORS.user, width: 3.5, type: 'dashed' },
-        itemStyle: { color: COLORS.user },
-        showSymbol: false,
-        endLabel: {
-          show: true,
-          formatter: () => 'You',
-          color: COLORS.user,
-          fontSize: 12,
-          fontWeight: 600,
-        },
-      },
     ],
   };
 }

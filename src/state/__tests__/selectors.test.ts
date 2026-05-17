@@ -486,10 +486,10 @@ describe('VIZ-07: selectShareOption', () => {
   // Derive BandShare[] from the same shared fixture (horizon 5 → 6 years)
   const bandSeries = deriveBandShares(result.series);
 
-  it('returns EChartsOption with exactly 6 series (5 band areas + 1 user line)', () => {
+  it('returns EChartsOption with exactly 5 series (5 stacked band areas; no rank line)', () => {
     const option = selectShareOption(bandSeries, result);
     const series = option.series as unknown[];
-    expect(series).toHaveLength(6);
+    expect(series).toHaveLength(5);
   });
 
   it('D-02/D-03: series[0].name is "Bottom 50%" (poorest-at-bottom, D-09 order)', () => {
@@ -504,44 +504,43 @@ describe('VIZ-07: selectShareOption', () => {
     expect(series[4]?.name).toBe('Top 0.1%');
   });
 
-  it('D-05/D-06: series[5] (user line) has yAxisIndex === 1 (hidden second axis)', () => {
+  it('G1: all 5 band series share stack "100%" (ECharts only stacks shared-group series)', () => {
     const option = selectShareOption(bandSeries, result);
-    const series = option.series as Array<{ yAxisIndex?: number }>;
-    expect(series[5]?.yAxisIndex).toBe(1);
-  });
-
-  it('D-05: series[0..4] are on yAxisIndex 0 (band areas on main axis)', () => {
-    const option = selectShareOption(bandSeries, result);
-    const series = option.series as Array<{ yAxisIndex?: number }>;
-    for (const s of series.slice(0, 5)) {
-      expect(s.yAxisIndex).toBe(0);
+    const series = option.series as Array<{ stack?: string }>;
+    for (const s of series) {
+      expect(s.stack).toBe('100%');
     }
   });
 
-  it('D-06: series[5] has no "stack" key (user line must NOT be stacked)', () => {
+  it('G1: xAxis is category type with one label per year (stacking requires a category axis)', () => {
     const option = selectShareOption(bandSeries, result);
-    const series = option.series as Array<{ stack?: string }>;
-    expect(series[5]?.stack).toBeUndefined();
+    const xAxis = option.xAxis as { type: string; data: string[] };
+    expect(xAxis.type).toBe('category');
+    expect(xAxis.data).toHaveLength(bandSeries.length);
   });
 
-  it('D-06: series[5] lineStyle.type is "dashed" (user findability cue)', () => {
+  it('G1: band series carry plain numeric values index-aligned to categories (not [x,y] pairs)', () => {
     const option = selectShareOption(bandSeries, result);
-    const series = option.series as Array<{ lineStyle?: { type?: string } }>;
-    expect(series[5]?.lineStyle?.type).toBe('dashed');
+    const series = option.series as Array<{ data: unknown[] }>;
+    expect(series[0]?.data).toHaveLength(bandSeries.length);
+    for (const v of series[0]!.data) {
+      expect(typeof v).toBe('number');
+    }
   });
 
-  it('D-06: series[5] has endLabel with show:true and formatter returning "You"', () => {
+  it('no rank/"You" line on the share chart (rank lives in Chart 3, not here)', () => {
     const option = selectShareOption(bandSeries, result);
-    const series = option.series as Array<{ endLabel?: { show?: boolean; formatter?: () => string } }>;
-    expect(series[5]?.endLabel?.show).toBe(true);
-    expect(series[5]?.endLabel?.formatter?.()).toBe('You');
+    const series = option.series as Array<{ name: string }>;
+    expect(series.some((s) => /your position|you/i.test(s.name))).toBe(false);
   });
 
-  it('yAxis is a 2-element array (RESEARCH Pattern 3 Pitfall 1 mitigation)', () => {
+  it('yAxis is a single 0–100% object (former hidden second axis removed with the rank line)', () => {
     const option = selectShareOption(bandSeries, result);
-    expect(Array.isArray(option.yAxis)).toBe(true);
-    const yAxis = option.yAxis as unknown[];
-    expect(yAxis).toHaveLength(2);
+    expect(Array.isArray(option.yAxis)).toBe(false);
+    const yAxis = option.yAxis as { type: string; min?: number; max?: number };
+    expect(yAxis.type).toBe('value');
+    expect(yAxis.min).toBe(0);
+    expect(yAxis.max).toBe(100);
   });
 
   it('D-04: series[0] (Bottom 50%) uses COLORS.median (#64748B)', () => {

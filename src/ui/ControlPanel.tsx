@@ -29,11 +29,11 @@ export function ControlPanel({ yAxisType, onYAxisTypeChange }: Props) {
         onChange={(v) => setInputs({ currentWealth: v })}
       />
 
-      {/* D-04: Annual savings — log slider, $2k–$2M */}
+      {/* D-04: Annual savings — log slider, $0–$2M (starts at 0) */}
       <LogSliderInput
         label="Annual savings"
         value={inputs.annualSavings}
-        min={2_000}
+        min={0}
         max={2_000_000}
         onChange={(v) => setInputs({ annualSavings: v })}
       />
