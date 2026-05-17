@@ -383,14 +383,14 @@ This is a copy/code review phase with one localized code fix. No databases, serv
 | A3 | No DOM render test is expected/required for this phase's verification | Standard Stack | Low — no DOM tooling exists; CONTEXT D-03 is satisfied by the static artifact + pure tests; consistent with project "automation verifies, browser-only → UAT" pattern. |
 | A4 | The §7 `SHARE_CAPTION` is byte-exact to the style guide §7 text | Pattern 2 | Low — verified by inspection (selectors.ts:425-426 vs §7); the executor must still add the explicit equality assertion. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Living-doc policy decision (planner's call per CONTEXT discretion)**
+1. **Living-doc policy decision (planner's call per CONTEXT discretion)** — RESOLVED: Plan 05-03 Task 2 locks the guide minor version bump + the `HarnessPage.tsx`→`AppShell.tsx` §3 correction as a mandatory acceptance criterion.
    - What we know: default lean is "fix string + add rule + version bump" for uncovered gaps; the `HarnessPage.tsx` stale ref is a concrete doc-accuracy finding.
    - What's unclear: whether the planner version-bumps the guide this phase or freezes it.
    - Recommendation: bump the guide minor version to (a) correct the `HarnessPage.tsx`→`AppShell.tsx` reference and (b) add any rule a FAIL exposes; record the version reviewed-against in `05-NEUT-02-REVIEW.md`.
 
-2. **Exact survivorship caveat wording**
+2. **Exact survivorship caveat wording** — RESOLVED: executor discretion per CONTEXT.md, bound to `SOURCES.jst2019.note` (no invented prose) and reviewed as its own NEUT-02 row against §1 in Plan 05-02 / 05-03.
    - What we know: must be a neutral condensation of `SOURCES.jst2019.note`, §1-compliant, rendered in `CitationFooter`.
    - What's unclear: the precise sentence (executor discretion).
    - Recommendation: one factual sentence, traceable to the JST note, no alarm punctuation; then review it as its own NEUT-02 row against §1.
