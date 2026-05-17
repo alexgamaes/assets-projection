@@ -43,6 +43,52 @@ describe('formatRankDelta (D-14 rank-delta + wealth-growth pairing)', () => {
     // Should contain "2.0×" (1 decimal, D-14 formatting requirement)
     expect(result).toMatch(/2\.0[×x]/i);
   });
+
+  // NEUT-02 Phase 5 / §6 D-14: byte-exact template shape assertion
+  it('matches the §6 D-14 template shape byte-exactly (p75 → p71, 2.3×)', () => {
+    // Template from NEUTRALITY-STYLE-GUIDE.md §6:
+    //   "Distribution position: p[NN] → p[MM], while real wealth grew [G]×."
+    expect(formatRankDelta(75, 71, 2.3)).toBe(
+      'Distribution position: p75 → p71, while real wealth grew 2.3×.',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// §6 D-15 disclosure — source-read equality record (NEUT-02 Phase 5)
+// ---------------------------------------------------------------------------
+// The D-15 disclosure sentence is inline JSX in SummaryReadout.tsx (lines 59-62).
+// It contains `&apos;` HTML entity which normalises to `'` in the DOM.
+// Since there is no jsdom/DOM tooling in this project, a runtime assertion is
+// not available — this is a source-read equality row per NEUT-02 policy.
+//
+// Source-read equality (verified 2026-05-17 against docs/NEUTRALITY-STYLE-GUIDE.md §6):
+//
+//   SummaryReadout.tsx:59-62 renders (JSX, &apos; → '):
+//     "Rank can move down while real wealth still grows — every tier's wealth
+//      increases over this horizon. See the wealth-by-tier chart for absolute amounts."
+//
+//   NEUTRALITY-STYLE-GUIDE.md §6 canonical text (verbatim):
+//     "Rank can move down while real wealth still grows — every tier's wealth
+//      increases over this horizon. See the wealth-by-tier chart for absolute amounts."
+//
+// Verdict: PASS — byte-exact match confirmed by source read (&apos; normalized).
+// The NEUT-02 review artifact records this as a source-read equality row.
+
+// ---------------------------------------------------------------------------
+// §5 D-09 nominal caption — exact template assertion (NEUT-02 Phase 5)
+// ---------------------------------------------------------------------------
+
+describe('formatMoneyIllusionCaption — §5 D-09 exact template (NEUT-02)', () => {
+  // Template from NEUTRALITY-STYLE-GUIDE.md §5:
+  //   "These figures are not adjusted for inflation. They assume a fixed [X]%
+  //    annual inflation rate ([source name]). Switch to Real for inflation-adjusted amounts."
+  it('matches the §5 template byte-exactly for the default 2.5% BLS rate', () => {
+    const sourceName = 'US Bureau of Labor Statistics — CPI-U long-run geometric mean (1926–2022)';
+    expect(formatMoneyIllusionCaption('nominal', 0.025, sourceName)).toBe(
+      `These figures are not adjusted for inflation. They assume a fixed 2.5% annual inflation rate (${sourceName}). Switch to Real for inflation-adjusted amounts.`,
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

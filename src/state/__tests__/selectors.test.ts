@@ -642,3 +642,31 @@ describe('VIZ-07: SHARE_CAPTION', () => {
     expect(SHARE_CAPTION).toContain('a falling share does not mean falling wealth');
   });
 });
+
+// ---------------------------------------------------------------------------
+// §3 REL_POS_CAPTION — source-read equality record (NEUT-02 Phase 5)
+// ---------------------------------------------------------------------------
+// REL_POS_CAPTION is defined as a module-private `const` in src/ui/AppShell.tsx
+// (line 32-33). It is not exported, so a module-import byte-exact assertion
+// cannot be added here without adding DOM tooling (which is out of scope per
+// RESEARCH §"Anti-Pattern: DOM test").
+//
+// Source-read equality (verified 2026-05-17 against docs/NEUTRALITY-STYLE-GUIDE.md §3):
+//
+//   AppShell.tsx:32-33 defines:
+//     const REL_POS_CAPTION =
+//       "This shows the user's rank within the distribution. Rank can move down
+//        while the user's real wealth still grows — every tier's wealth increases
+//        over this horizon. See the wealth-by-tier chart above for absolute amounts.";
+//
+//   NEUTRALITY-STYLE-GUIDE.md §3 canonical text (verbatim):
+//     "This shows the user's rank within the distribution. Rank can move down
+//      while the user's real wealth still grows — every tier's wealth increases
+//      over this horizon. See the wealth-by-tier chart above for absolute amounts."
+//
+// Verdict: PASS — byte-exact match confirmed by source read.
+// The NEUT-02 review artifact records this as a source-read equality row.
+//
+// Note: if REL_POS_CAPTION is ever exported from AppShell.tsx, replace this
+// comment block with an import + expect(REL_POS_CAPTION).toBe("...") assertion.
+
