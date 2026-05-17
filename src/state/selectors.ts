@@ -398,11 +398,12 @@ export function selectReinflated(
  * startRank / endRank come from relativePosition and are basis-independent.
  */
 export interface Summary {
-  endingWealth: number;   // last series userWealth (already basis-adjusted)
-  growthMultiple: number; // endingWealth / startingWealth
-  cagr: number;           // (end/start)^(1/years) - 1
-  startRank: number;      // relativePosition[0].userRank   (0–100, basis-independent)
-  endRank: number;        // relativePosition[last].userRank
+  endingWealth: number;       // last series userWealth (already basis-adjusted)
+  growthMultiple: number;     // endingWealth / startingWealth (basis-adjusted — display only)
+  realGrowthMultiple: number; // ALWAYS real-basis — feeds the §6/D-14 clause
+  cagr: number;               // (end/start)^(1/years) - 1
+  startRank: number;          // relativePosition[0].userRank   (0–100, basis-independent)
+  endRank: number;            // relativePosition[last].userRank
 }
 
 // ---------------------------------------------------------------------------
@@ -651,19 +652,33 @@ export function selectDonutOption(
 }
 
 /**
- * selectSummary — derives the five summary metrics from a ProjectionResult.
- * Guard: if startingWealth <= 0, growthMultiple and cagr are 0 (no division-by-zero).
+ * selectSummary — derives the six summary metrics from a ProjectionResult.
+ *
+ * @param r   The (basis-adjusted) result — `endingWealth`, `growthMultiple`, `cagr`,
+ *            and ranks are derived from this. When basis==='real' pass `rawResult`
+ *            for both args; when basis==='nominal' pass the reinflated result as `r`
+ *            and the original real-basis `rawResult` as `raw`.
+ * @param raw The real-basis (pre-reinflation) ProjectionResult — used to derive
+ *            `realGrowthMultiple` (always real-basis, feeds the §6/D-14 clause).
+ *
+ * Guard: if startingWealth <= 0, growthMultiple / realGrowthMultiple / cagr are 0
+ * (no division-by-zero).
  */
-export function selectSummary(r: ProjectionResult): Summary {
+export function selectSummary(r: ProjectionResult, raw: ProjectionResult): Summary {
   const first = r.series[0]!;
   const last = r.series[r.series.length - 1]!;
   const years = last.year - first.year;
   const start = first.userWealth;
   const end = last.userWealth;
+  const rawFirst = raw.series[0]!;
+  const rawLast = raw.series[raw.series.length - 1]!;
+  const rStart = rawFirst.userWealth;
+  const rEnd = rawLast.userWealth;
   const rp = r.relativePosition;
   return {
     endingWealth: end,
     growthMultiple: start > 0 ? end / start : 0,
+    realGrowthMultiple: rStart > 0 ? rEnd / rStart : 0, // basis-invariant
     cagr: start > 0 && years > 0 ? (end / start) ** (1 / years) - 1 : 0,
     startRank: rp[0]!.userRank,
     endRank: rp[rp.length - 1]!.userRank,

@@ -421,24 +421,24 @@ describe('ENTRY-04: selectReinflated', () => {
 
 describe('ENTRY-05: selectSummary', () => {
   it('endingWealth equals the last series snapshot userWealth', () => {
-    const summary: Summary = selectSummary(result);
+    const summary: Summary = selectSummary(result, result);
     const lastWealth = result.series[result.series.length - 1]!.userWealth;
     expect(summary.endingWealth).toBe(lastWealth);
   });
 
   it('startRank equals relativePosition[0].userRank', () => {
-    const summary: Summary = selectSummary(result);
+    const summary: Summary = selectSummary(result, result);
     expect(summary.startRank).toBe(result.relativePosition[0]!.userRank);
   });
 
   it('endRank equals relativePosition[last].userRank', () => {
-    const summary: Summary = selectSummary(result);
+    const summary: Summary = selectSummary(result, result);
     const lastRank = result.relativePosition[result.relativePosition.length - 1]!.userRank;
     expect(summary.endRank).toBe(lastRank);
   });
 
   it('growthMultiple > 0 and cagr > 0 on positive fixture', () => {
-    const summary: Summary = selectSummary(result);
+    const summary: Summary = selectSummary(result, result);
     expect(summary.growthMultiple).toBeGreaterThan(0);
     expect(summary.cagr).toBeGreaterThan(0);
   });
@@ -451,29 +451,29 @@ describe('ENTRY-05: selectSummary', () => {
         ...result.series.slice(1),
       ],
     };
-    const summary: Summary = selectSummary(zeroStartResult);
+    const summary: Summary = selectSummary(zeroStartResult, zeroStartResult);
     expect(summary.growthMultiple).toBe(0);
     expect(summary.cagr).toBe(0);
   });
 
   it('nominal-path D-08 rank invariant (W-2): nominal endingWealth > real endingWealth', () => {
-    const realSummary: Summary = selectSummary(result);
+    const realSummary: Summary = selectSummary(result, result);
     const nominalResult = selectReinflated(result, 'nominal', 0.025);
-    const nominalSummary: Summary = selectSummary(nominalResult);
+    const nominalSummary: Summary = selectSummary(nominalResult, result);
     expect(nominalSummary.endingWealth).toBeGreaterThan(realSummary.endingWealth);
   });
 
   it('nominal-path D-08 rank invariant (W-2): startRank identical in real and nominal', () => {
-    const realSummary: Summary = selectSummary(result);
+    const realSummary: Summary = selectSummary(result, result);
     const nominalResult = selectReinflated(result, 'nominal', 0.025);
-    const nominalSummary: Summary = selectSummary(nominalResult);
+    const nominalSummary: Summary = selectSummary(nominalResult, result);
     expect(nominalSummary.startRank).toBe(realSummary.startRank);
   });
 
   it('nominal-path D-08 rank invariant (W-2): endRank identical in real and nominal', () => {
-    const realSummary: Summary = selectSummary(result);
+    const realSummary: Summary = selectSummary(result, result);
     const nominalResult = selectReinflated(result, 'nominal', 0.025);
-    const nominalSummary: Summary = selectSummary(nominalResult);
+    const nominalSummary: Summary = selectSummary(nominalResult, result);
     expect(nominalSummary.endRank).toBe(realSummary.endRank);
   });
 
