@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4.1 UI-SPEC approved
-last_updated: "2026-05-17T00:06:58.887Z"
-last_activity: 2026-05-17 -- Phase 04.1 planning complete
+last_updated: "2026-05-17T00:11:09.986Z"
+last_activity: 2026-05-17 -- Phase 04.1 execution started
 progress:
   total_phases: 6
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-15)
 
 **Core value:** Make the exponential, distribution-dependent nature of capital returns viscerally clear — using real historical data, presented neutrally — so a person can see both their own trajectory and how their relative position shifts over time.
-**Current focus:** Phase 5 — neutrality review & release readiness
+**Current focus:** Phase 04.1 — tier-share-of-economy-visualization-at-the-end-of-the-projec
 
 ## Current Position
 
-Phase: 4.1
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-17 -- Phase 04.1 planning complete
+Phase: 04.1 (tier-share-of-economy-visualization-at-the-end-of-the-projec) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 04.1
+Last activity: 2026-05-17 -- Phase 04.1 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
