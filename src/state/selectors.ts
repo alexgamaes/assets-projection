@@ -593,9 +593,19 @@ export function selectDonutOption(
   data[userBandIdx]!.itemStyle.borderWidth = 3;
   data[userBandIdx]!.label = { show: true, fontWeight: 600 };
 
-  // D-08: center label — topSetPercentile-derived, numeric only (T-03-03, NEUTRALITY §1 no '!')
-  const topPct = (100 - last.topSetPercentile * 100).toFixed(1);
-  const centerText = `Top ${topPct}%\nhold ≥50%\n(year ${last.year})`;
+  // D-08: center label — derived from the SAME final-year bands the donut draws
+  // (04.1-REVIEW.md CR-01: never from an independent topSetPercentile that can
+  // contradict the slices). When the final-year curve is degraded (engine
+  // shiftScaleCurve fallback / out-of-domain anchors) surface an explicit
+  // "calibration unavailable" state instead of asserting a precise concentration
+  // figure (CR-01 / WR-05). T-03-03: numeric-only; NEUTRALITY §1: no '\!'.
+  // Non-degraded: report the cumulative share held by the top 1% (the three
+  // richest bands the donut renders) so the number is consistent by
+  // construction with the visible slices (WR-01).
+  const top1Share = lb.top01 + lb.band99to999 + lb.band90to99;
+  const centerText = lb.degraded
+    ? `Calibration unavailable\n(year ${last.year})`
+    : `Top 1% hold\n${(top1Share * 100).toFixed(1)}%\n(year ${last.year})`;
 
   return {
     tooltip: {

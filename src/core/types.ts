@@ -128,6 +128,29 @@ export interface ReturnByTier {
 }
 
 // ---------------------------------------------------------------------------
+// Calibrated distribution curve (structural mirror)
+// ---------------------------------------------------------------------------
+
+/**
+ * Structural shape of a calibrated lognormal+Pareto curve.
+ *
+ * This MUST stay structurally identical to the `Curve` interface declared in
+ * `distribution.ts`. It is duplicated here (rather than imported) deliberately:
+ * `distribution.ts` imports `Anchors`/`ReturnByTier` from this module, so an
+ * `import type { Curve }` the other direction would create a types↔distribution
+ * import cycle. A pure structural mirror keeps the dependency graph acyclic
+ * while letting `YearSnapshot` carry the engine's per-year curve (G1 fix).
+ */
+export interface CurveShape {
+  lognormal: { mu: number; sigma: number };
+  pareto: { alpha: number; xm: number };
+  /** The percentile at which the body transitions to the tail. */
+  stitchQuantile: number;
+  /** Total expected wealth E[X] of the combined distribution. */
+  totalWealth: number;
+}
+
+// ---------------------------------------------------------------------------
 // Engine parameter bag (injected, never fetched)
 // ---------------------------------------------------------------------------
 
@@ -228,6 +251,31 @@ export interface YearSnapshot {
    * Zero when dragStrength=0.
    */
   assetInflation: number;
+  /**
+   * The engine's calibrated lognormal+Pareto curve for THIS year (G1 fix).
+   *
+   * The engine maintains a valid, continuously-evolving curve every year: it
+   * `calibrateCurve`s when the anchor ratios are in-domain and falls back to
+   * `shiftScaleCurve` (fixed-shape scaled shift) when endogenous evolution
+   * drives the Pareto tail index alpha ≤ 1 (CR-02). Persisting this curve lets
+   * `deriveBandShares` (VIZ-07 Chart 4 / Chart 5) read per-year Lorenz band
+   * shares off the SAME evolving curve the rest of the engine uses, instead of
+   * independently re-calibrating from anchors and freezing on calibration
+   * failure (root cause of debug session `chart4-not-stacking`).
+   *
+   * Optional so legacy/synthetic snapshots constructed in tests remain valid;
+   * `deriveBandShares` falls back to anchor re-calibration when absent.
+   */
+  curve?: CurveShape;
+  /**
+   * True when this year's curve came from the `shiftScaleCurve` fallback rather
+   * than a fresh `calibrateCurve` (endogenous out-of-domain, CR-02 alpha ≤ 1).
+   * The bands are still valid and evolving (shift-scale preserves the curve
+   * shape), but the underlying anchors are outside the calibration domain — the
+   * donut surfaces this as an explicit degraded state instead of asserting a
+   * precise concentration claim (CR-01 / WR-05).
+   */
+  curveDegraded?: boolean;
 }
 
 /**

@@ -30,6 +30,12 @@
  * PITFALLS P4: no transfer/redistribution in drag.ts or here — non-conservation asserted separately.
  * PITFALLS P10: r_eff = r − assetInflation (small−small), never large−large differences.
  *
+ * G1 fix (debug session chart4-not-stacking): every snapshot now carries the
+ * engine's per-year `curve` (and a `curveDegraded` flag when it came from the
+ * shiftScaleCurve fallback). This lets `deriveBandShares` read VIZ-07 band
+ * shares off the SAME continuously-evolving curve the engine uses, instead of
+ * independently re-calibrating from anchors and freezing on CR-02 failure.
+ *
  * @module engine
  */
 
@@ -204,6 +210,8 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
   // Year 0: calibrate curve + initialize state
   // -------------------------------------------------------------------------
   let curve = calibrateCurve(params.anchors);
+  // Year 0 is always a fresh, in-domain calibration → never degraded.
+  let curveDegraded = false;
   let anchorWealth = initialAnchorWealth(params.anchors);
 
   // User is a test-particle: starts with inputs.currentWealth (A5)
@@ -244,8 +252,11 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
     // Actually: the loop records state BEFORE the annual step, but
     // year 0 snapshot uses the initial wealth directly (no compounding yet).
 
-    // Build snapshot for this year
-    // _totalWealth is an internal field used by deriveShares
+    // Build snapshot for this year.
+    // _totalWealth is an internal field used by deriveShares.
+    // curve / curveDegraded (G1 fix): persist the engine's evolving per-year curve so
+    // deriveBandShares (VIZ-07) reads band shares off the SAME curve instead of
+    // independently re-calibrating from anchors and freezing on CR-02 failure.
     const snap: YearSnapshot & { _totalWealth: number } = {
       year,
       anchorWealth: { ...anchorWealth },
@@ -253,6 +264,13 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
       userPercentile,
       topSetPercentile,
       assetInflation,
+      curve: {
+        lognormal: { ...curve.lognormal },
+        pareto: { ...curve.pareto },
+        stitchQuantile: curve.stitchQuantile,
+        totalWealth: curve.totalWealth,
+      },
+      curveDegraded,
       _totalWealth: curve.totalWealth,
     };
     series.push(snap);
@@ -267,20 +285,31 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
     // Endogenous fallback: heterogeneous returns cause the top01/top1 ratio to grow over
     // time, eventually driving Pareto alpha ≤ 1 (CR-02 guard). When that happens,
     // calibrateCurve throws. We fall back to shiftScaleCurve (fixed-shape-scaled shift)
-    // to keep the engine running — the shape is frozen from the last valid calibration.
+    // to keep the engine running — the shape is frozen from the last valid calibration,
+    // but the LOCATION continues to evolve (so band shares keep moving, not freeze).
     // This is not a silent clamp: the guard fires on direct miscalibration; the engine
     // fallback is an explicit, named degradation path for evolved-distribution out-of-domain.
+    // nextDegraded tracks whether the next year's curve is a fallback (CR-01/WR-05).
     let nextCurve: Curve;
+    let nextDegraded: boolean;
     if (params.distributionEvolution === 'endogenous') {
       try {
         nextCurve = calibrateCurve(anchorWealthToAnchors(newAnchorWealth, params));
+        nextDegraded = false;
       } catch {
         // Endogenous re-calibration failed (e.g. CR-02: alpha ≤ 1 from evolved ratio).
         // Fall back to shift-scale to preserve engine continuity (see engine.ts header).
+        // The curve's location still evolves year-over-year, so VIZ-07 band shares
+        // continue to change with the horizon instead of freezing — but the anchors
+        // are out-of-domain, so this year is flagged degraded for the donut's
+        // explicit "calibration unavailable" state.
         nextCurve = shiftScaleCurve(curve, anchorWealth, newAnchorWealth);
+        nextDegraded = true;
       }
     } else {
+      // 'fixed-shape-scaled' is a deliberate modeling choice, not a degradation.
       nextCurve = shiftScaleCurve(curve, anchorWealth, newAnchorWealth);
+      nextDegraded = false;
     }
 
     // Step 7: Advance user wealth (same ordinary-annuity convention; user's moving-tier rate)
@@ -291,6 +320,7 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
     // Update state for next iteration
     anchorWealth = newAnchorWealth;
     curve = nextCurve;
+    curveDegraded = nextDegraded;
     userWealth = newUserWealth;
   }
 

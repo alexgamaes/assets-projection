@@ -38,7 +38,8 @@ import { deriveBandShares } from '../tierBands.js';
 import { calibrateCurve, cumulativeShareFromTop } from '../distribution.js';
 import { projectionEngine } from '../engine.js';
 import { selectReinflated } from '../../state/selectors.js';
-import type { YearSnapshot } from '../types.js';
+import type { Params, YearSnapshot } from '../types.js';
+import { DEFAULTS, SEED_WEALTH } from '../../data/defaults.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -360,6 +361,82 @@ describe('deriveBandShares: fallback — calibration error does not throw (T-04.
     expect(band1.band90to99).toBe(band0.band90to99);
     expect(band1.band99to999).toBe(band0.band99to999);
     expect(band1.top01).toBe(band0.top01);
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// G1 regression (debug session chart4-not-stacking): bands must sum to 1.0 for
+// EVERY horizon year of a realistic projection, and the final-year top-tier
+// share must EVOLVE with horizon length (not freeze on calibration failure).
+// ---------------------------------------------------------------------------
+
+describe('deriveBandShares: G1 regression — full-horizon sum + evolving concentration', () => {
+  it('per-year band shares sum to 1.0 for EVERY year of a realistic 60-year DEFAULTS projection', () => {
+    const params: Params = { ...DEFAULTS, horizon: 60 };
+    const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
+    const result = projectionEngine(inputs, params);
+    const bands = deriveBandShares(result.series);
+    expect(bands).toHaveLength(result.series.length);
+    expect(bands.length).toBe(61);
+    for (const b of bands) {
+      const sum = b.bottom50 + b.band50to90 + b.band90to99 + b.band99to999 + b.top01;
+      expect(
+        Math.abs(sum - 1.0),
+        `year ${b.year}: band sum=${sum} (deviation=${Math.abs(sum - 1.0)})`,
+      ).toBeLessThan(DIST_TOL);
+    }
+  });
+
+  it('per-year band shares sum to 1.0 across the full synthetic 60-year horizon', () => {
+    const result = projectionEngine(syntheticInputs, makeSyntheticParams({ horizon: 60 }));
+    const bands = deriveBandShares(result.series);
+    for (const b of bands) {
+      const sum = b.bottom50 + b.band50to90 + b.band90to99 + b.band99to999 + b.top01;
+      expect(Math.abs(sum - 1.0), `year ${b.year}: sum=${sum}`).toBeLessThan(DIST_TOL);
+    }
+  });
+
+  it('final-year top-0.1% share EVOLVES with horizon and does not freeze (G1)', () => {
+    const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
+    const finalBand = (h: number) => {
+      const result = projectionEngine(inputs, { ...DEFAULTS, horizon: h });
+      const bands = deriveBandShares(result.series);
+      return bands[bands.length - 1]!;
+    };
+    // Calibrating regime (anchors still in-domain): concentration STRICTLY
+    // increases with horizon. Pre-fix every horizon was byte-identical
+    // (frozen at the last-calibrated year) — this is the core G1 assertion.
+    const t3 = finalBand(3);
+    const t5 = finalBand(5);
+    const t8 = finalBand(8);
+    const t10 = finalBand(10);
+    expect(t3.degraded).toBe(false);
+    expect(t5.top01).toBeGreaterThan(t3.top01);
+    expect(t8.top01).toBeGreaterThan(t5.top01);
+    expect(t10.top01).toBeGreaterThan(t8.top01);
+    // The short-horizon final shares are all distinct (no freeze).
+    expect(new Set([t3.top01, t5.top01, t8.top01, t10.top01]).size).toBe(4);
+    // Out-of-domain regime: the engine shape-frozen shiftScaleCurve fallback
+    // takes over; the entry is flagged degraded so the donut surfaces an
+    // explicit unavailable state instead of a fabricated precise figure.
+    const t20 = finalBand(20);
+    expect(t20.degraded).toBe(true);
+  });
+
+  it('out-of-domain (engine shiftScaleCurve fallback) years are flagged degraded but still sum to 1.0', () => {
+    const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
+    const result = projectionEngine(inputs, { ...DEFAULTS, horizon: 60 });
+    const bands = deriveBandShares(result.series);
+    const degraded = bands.filter((b) => b.degraded);
+    // At default settings the endogenous ratio drifts out of domain within 60 years.
+    expect(degraded.length).toBeGreaterThan(0);
+    for (const b of degraded) {
+      const sum = b.bottom50 + b.band50to90 + b.band90to99 + b.band99to999 + b.top01;
+      expect(Math.abs(sum - 1.0)).toBeLessThan(DIST_TOL);
+    }
+    // Year 0 is always a fresh calibration → never degraded.
+    expect(bands[0]!.degraded).toBe(false);
   });
 });
 

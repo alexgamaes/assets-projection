@@ -600,15 +600,25 @@ describe('VIZ-07: selectDonutOption', () => {
     expect(series[0]?.data[4]?.name).toBe('Top 0.1%');
   });
 
-  it('D-08: graphic center label text is derived from topSetPercentile (non-empty string)', () => {
+  it('D-08/CR-01: center label is band-derived and neutral; no contradictory topSetPercentile claim', () => {
     const option = selectDonutOption(bandSeries, result);
     const graphics = option.graphic as Array<{ style?: { text?: string } }>;
     const centerText = graphics[0]?.style?.text ?? '';
     expect(centerText.length).toBeGreaterThan(0);
-    // Must contain the year and "hold ≥50%" phrasing (D-08)
-    expect(centerText).toContain('hold ≥50%');
-    // Must NOT contain an exclamation mark (NEUTRALITY-STYLE-GUIDE §1)
+    // Always carries the year (D-08)
+    expect(centerText).toContain('(year ');
+    // NEUTRALITY-STYLE-GUIDE §1: no exclamation mark
     expect(centerText).not.toContain('!');
+    const lb = bandSeries[bandSeries.length - 1]!;
+    if (lb.degraded) {
+      // CR-01/WR-05: explicit unavailable state, never a fabricated figure
+      expect(centerText).toContain('Calibration unavailable');
+    } else {
+      // WR-01: the reported figure is the top-1% share of the SAME bands drawn
+      const expected = (lb.top01 + lb.band99to999 + lb.band90to99) * 100;
+      expect(centerText).toContain('Top 1% hold');
+      expect(centerText).toContain(`${expected.toFixed(1)}%`);
+    }
   });
 });
 

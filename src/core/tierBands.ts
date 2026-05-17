@@ -27,20 +27,35 @@
  * Normalization (Pitfall 3 float-sum correction): divide each band by their sum
  * so they sum exactly to 1.0. Guard sum <= 0 → use factor 1 (degenerate entry).
  *
- * Fallback (T-04.1-01 / threat-model mitigate): when calibrateCurve throws for a year
- * (CR-02 alpha <= 1 in evolved distributions), carry forward the previous year's BandShare.
- * For year index 0 failure, emit a degenerate entry with all five bands = 0.2 (uniform
- * distribution that sums to 1.0). A caught error NEVER propagates out of deriveBandShares.
+ * ── G1 fix (debug session chart4-not-stacking) ────────────────────────────────
+ * ROOT CAUSE: the previous implementation re-calibrated a fresh curve from each
+ * snapshot's anchors INDEPENDENTLY of the engine. Endogenous evolution drives
+ * top01/top1 past 10 (Pareto alpha ≤ 1, CR-02) by ~year 11 at default settings,
+ * so calibrateCurve threw for ~70% of horizon years. The bare-catch fallback then
+ * froze the band series at the last-calibrated (already pathologically
+ * concentrated) year — so Chart 4 showed a flat ~100% top band and Chart 5's
+ * donut was horizon-invariant.
  *
- * Boundary decision (INTERFACES in 04.1-01-PLAN.md): anchorWealthToAnchors and
- * shiftScaleCurve are private in engine.ts — DO NOT import from engine.ts. Anchors
- * are built locally from snap.anchorWealth ({median,top10,top1,top01} numbers).
- * calibrateCurve only reads .value — a minimal { value } wrapper is sufficient.
+ * FIX: the engine already maintains a valid, continuously-evolving curve every
+ * year (calibrate when in-domain, shiftScaleCurve when out-of-domain — the
+ * location keeps evolving so shares keep moving). deriveBandShares now reads
+ * band shares off THAT persisted `snap.curve` via cumulativeShareFromTop, so the
+ * bands evolve correctly across the whole horizon and the donut tracks horizon
+ * length. snap.curveDegraded (true on the shiftScaleCurve fallback path) is
+ * surfaced as BandShare.degraded so the donut can render an explicit
+ * "calibration unavailable" state instead of a fabricated/contradictory claim
+ * (04.1-REVIEW.md CR-01 / WR-05).
  *
- * D-12 basis-invariance: since cumulativeShareFromTop returns fractions of the curve's
- * own totalWealth (not absolute values), re-inflating anchorWealth by (1+i)^year shifts
- * all wealth values proportionally, leaving the ratio (Lorenz fractions) unchanged.
- * This is verified by the D-12 test in the Wave-0 test suite.
+ * Anchor re-calibration is kept ONLY as a fallback for snapshots that lack a
+ * persisted curve (legacy/synthetic test fixtures). When that fallback itself
+ * throws, the entry is carried forward (year ≥ 1) or degenerate-uniform
+ * (year 0), both tagged degraded — and a caught error NEVER propagates out of
+ * deriveBandShares (T-04.1-01 / threat-model mitigate).
+ *
+ * D-12 basis-invariance: since cumulativeShareFromTop returns fractions of the
+ * curve's own totalWealth (not absolute values), re-inflating anchorWealth by
+ * (1+i)^year shifts all wealth values proportionally, leaving the ratio (Lorenz
+ * fractions) unchanged. Verified by the D-12 test in the Wave-0 suite.
  *
  * SECURITY (threat-model T-04.1-SC): zero framework/DOM/fetch/randomness/timestamps —
  * pure numeric module. No new packages introduced this phase.
@@ -49,7 +64,7 @@
  */
 
 import { calibrateCurve, cumulativeShareFromTop } from './distribution.js';
-import type { YearSnapshot } from './types.js';
+import type { CurveShape, YearSnapshot } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Exports: BandShare type
@@ -79,22 +94,30 @@ export interface BandShare {
   band99to999: number;
   /** Top 0.1% wealth share. */
   top01: number;
+  /**
+   * True when this year's underlying curve is out of the calibration domain
+   * (endogenous evolution drove Pareto alpha ≤ 1, so the engine used the
+   * shiftScaleCurve fallback) OR this entry was synthesized by the standalone
+   * recalibration fallback. The band fractions are still valid and sum to 1.0,
+   * but the precise concentration claim is not trustworthy — the donut renders
+   * an explicit "calibration unavailable" state instead of asserting a precise
+   * top-set figure (04.1-REVIEW.md CR-01 / WR-05).
+   */
+  degraded: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Private: build Anchors-compatible object from snap.anchorWealth
+// Private: build Anchors-compatible object from snap.anchorWealth (fallback path)
 // ---------------------------------------------------------------------------
 
 /**
  * Build a minimal Anchors-compatible object from a snapshot's anchorWealth numbers.
  * calibrateCurve only reads .value on each anchor — this minimal wrapper is sufficient.
- * We do NOT import the full SourcedParam type to stay decoupled from engine.ts internals.
+ * Used ONLY for the legacy fallback when a snapshot lacks a persisted engine curve.
  */
 function buildAnchorsFromSnap(
   anchorWealth: YearSnapshot['anchorWealth'],
 ): Parameters<typeof calibrateCurve>[0] {
-  // calibrateCurve accepts Anchors where each field is a SourcedParam (reads .value only).
-  // We provide the full SourcedParam shape to satisfy the TypeScript type.
   const synSource = {
     sourceName: 'tierBands-internal',
     figureUsed: 'snap.anchorWealth',
@@ -116,8 +139,10 @@ function buildAnchorsFromSnap(
 // ---------------------------------------------------------------------------
 
 /**
- * Returns a degenerate BandShare with all five bands = 0.2 (sums to 1.0).
- * Used when calibrateCurve throws at year index 0 (no prior entry to carry forward).
+ * Returns a degenerate BandShare with all five bands = 0.2 (sums to 1.0), tagged
+ * degraded so the UI surfaces an explicit unavailable state rather than a
+ * fabricated egalitarian distribution (04.1-REVIEW.md WR-05).
+ * Used only when the fallback recalibration throws at year index 0.
  */
 function degenerateBand(year: number): BandShare {
   return {
@@ -127,6 +152,7 @@ function degenerateBand(year: number): BandShare {
     band90to99: 0.2,
     band99to999: 0.2,
     top01: 0.2,
+    degraded: true,
   };
 }
 
@@ -153,6 +179,7 @@ function degenerateBand(year: number): BandShare {
 function computeBandFromCurve(
   year: number,
   curve: Parameters<typeof cumulativeShareFromTop>[0],
+  degraded: boolean,
 ): BandShare {
   const s50 = cumulativeShareFromTop(curve, 0.5);
   const s90 = cumulativeShareFromTop(curve, 0.9);
@@ -176,6 +203,7 @@ function computeBandFromCurve(
     band90to99: rawBand90to99 * f,
     band99to999: rawBand99to999 * f,
     top01: rawTop01 * f,
+    degraded,
   };
 }
 
@@ -189,6 +217,15 @@ function computeBandFromCurve(
  * Returns a BandShare[] of the same length as series. Each entry contains the five
  * fixed population-fraction bands (D-02) whose values sum to 1.0 (D-01) for that year.
  *
+ * Primary path (G1 fix): read shares off the engine's persisted, continuously
+ * evolving per-year `snap.curve` via cumulativeShareFromTop. snap.curveDegraded
+ * (engine's shiftScaleCurve fallback) propagates to BandShare.degraded.
+ *
+ * Fallback path: when a snapshot has no persisted curve (legacy/synthetic test
+ * fixtures), recalibrate from anchors; on failure carry forward (year ≥ 1) or
+ * emit a degenerate-uniform entry (year 0), both tagged degraded. A caught error
+ * NEVER propagates out of deriveBandShares.
+ *
  * @param series - Year-by-year snapshots from projectionEngine.
  * @returns Per-year five-band Lorenz fractions, one entry per snapshot year.
  */
@@ -199,14 +236,20 @@ export function deriveBandShares(series: YearSnapshot[]): BandShare[] {
     const snap = series[i]!;
     const year = snap.year;
 
+    // Primary path: use the engine's persisted, continuously-evolving curve.
+    if (snap.curve) {
+      const curve: CurveShape = snap.curve;
+      result.push(computeBandFromCurve(year, curve, snap.curveDegraded === true));
+      continue;
+    }
+
+    // Fallback path: snapshot has no persisted curve (legacy/synthetic fixture).
+    // Recalibrate from anchors; on failure carry forward / degenerate (all degraded).
     try {
       const anchors = buildAnchorsFromSnap(snap.anchorWealth);
       const curve = calibrateCurve(anchors);
-      result.push(computeBandFromCurve(year, curve));
+      result.push(computeBandFromCurve(year, curve, false));
     } catch {
-      // Calibration failed (e.g. CR-02: alpha <= 1 from evolved top01/top1 ratio).
-      // Fall back: carry forward the previous year's BandShare (change only the year field).
-      // For year index 0 (no prior entry), emit a degenerate uniform entry summing to 1.0.
       if (i === 0) {
         result.push(degenerateBand(year));
       } else {
@@ -214,6 +257,7 @@ export function deriveBandShares(series: YearSnapshot[]): BandShare[] {
         result.push({
           ...prev,
           year,
+          degraded: true,
         });
       }
     }
