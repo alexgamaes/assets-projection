@@ -166,3 +166,28 @@ This sentence is not collapsible, tooltip-only, or hidden behind any interaction
 ### Neutrality Test
 
 The disclosure is mechanistic and non-editorial. It does not assign blame or virtue to any tier. It states what the model shows: parallel compounding of all tiers can produce rank movement even when absolute wealth grows for the user. The phrase "real wealth still grows" is technically precise — it refers to the real-basis wealth trajectory, not a normative claim.
+
+---
+
+## Section 7 — D-16 Share-of-Economy Neutral Disclosure Rule
+
+**Seeded:** 2026-05-16 (Phase 4.1, Plan 03)
+**Phase 5 gate:** NEUT-02 reviewer will verify the rendered caption matches this template verbatim.
+
+### Context
+
+The share-of-economy charts (Chart 4: stacked-area; Chart 5: donut) show each tier's fraction of total projected wealth over time and at the final horizon year. Shares can shift over time while every band's real wealth still grows — a falling share is not falling wealth. This distinction is critical because share charts can be misread as zero-sum (i.e., one tier's share gain must come at another's expense). This model is non-conserving: all tiers compound simultaneously, and the total projected wealth pool expands each year. A tier's share can decline purely because another tier is compounding faster, with no extraction or transfer involved. The caption is mandatory to prevent this misreading.
+
+### Required Caption Template (D-16)
+
+> "This shows each tier's share of total projected wealth. Shares can shift over time while every tier's real wealth still grows — a falling share does not mean falling wealth, only that another tier is compounding faster. See the wealth-by-tier chart above for absolute amounts."
+
+### Constraints
+
+- The caption is a mandatory visible DOM `<p>` element. It must not be collapsible, tooltip-only, or hidden behind any interaction.
+- The caption must appear on or near BOTH Chart 4 (stacked-area) and Chart 5 (donut).
+- Any revision to this caption text requires a corresponding update to `SHARE_CAPTION` in `src/state/selectors.ts` (the two must remain in sync).
+
+### Neutrality Test
+
+The caption is mechanistic and non-editorial. It describes what the model shows: shares can move while absolute wealth grows for every tier. The no-zero-sum clause ("a falling share does not mean falling wealth, only that another tier is compounding faster") is technically precise — it reflects the non-conservation property of the model, not a normative claim about outcomes. No alarm punctuation, no banned verbs, no evaluative framing.

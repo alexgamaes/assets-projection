@@ -13,11 +13,17 @@ import {
   selectCitationFooter,
   selectReinflated,
   selectSummary,
+  selectShareOption,
+  selectDonutOption,
+  SHARE_CAPTION,
 } from '../state/selectors.js';
 import { useProjectionStore } from '../state/store.js';
 import { TimeSeriesChart } from '../viz/TimeSeriesChart.js';
 import { DivergenceChart } from '../viz/DivergenceChart.js';
 import { RelativePosChart } from '../viz/RelativePosChart.js';
+import { TierShareChart } from '../viz/TierShareChart.js';
+import { DonutChart } from '../viz/DonutChart.js';
+import { deriveBandShares } from '../core/tierBands.js';
 import { CitationFooter } from './CitationFooter.js';
 import { ControlPanel } from './ControlPanel.js';
 import { SummaryReadout } from './SummaryReadout.js';
@@ -70,6 +76,20 @@ export function AppShell() {
   const relOption = useMemo(
     () => (rawResult !== null ? selectRelPosOption(rawResult) : null),
     [rawResult],
+  );
+
+  // D-12: Charts 4 and 5 use rawResult — band shares are basis-invariant (real/nominal toggle has no effect)
+  const bandShares = useMemo(
+    () => (rawResult !== null ? deriveBandShares(rawResult.series) : null),
+    [rawResult],
+  );
+  const shareOption = useMemo(
+    () => (bandShares !== null && rawResult !== null ? selectShareOption(bandShares, rawResult) : null),
+    [bandShares, rawResult],
+  );
+  const donutOption = useMemo(
+    () => (bandShares !== null && rawResult !== null ? selectDonutOption(bandShares, rawResult) : null),
+    [bandShares, rawResult],
   );
 
   // D-13: summary metrics (only when result is non-null)
@@ -131,6 +151,32 @@ export function AppShell() {
                   Position in the wealth distribution over time
                 </h2>
                 <RelativePosChart option={relOption!} caption={REL_POS_CAPTION} />
+              </section>
+
+              {/* VIZ-07: Chart 4 — Stacked-area share of total wealth — uses rawResult (D-12 basis-invariant) */}
+              <section className="bg-slate-50 border border-slate-200 p-4 rounded">
+                <h2 className="text-[20px] font-semibold text-slate-800 mb-4">
+                  Share of total wealth by tier over time
+                </h2>
+                {shareOption !== null && (
+                  <TierShareChart option={shareOption} caption={SHARE_CAPTION} />
+                )}
+                <p className="text-sm font-normal text-slate-500 mt-1">
+                  Shares are identical in real and nominal terms — the real/nominal toggle does not affect this view.
+                </p>
+              </section>
+
+              {/* VIZ-07: Chart 5 — End-of-horizon donut — uses rawResult (D-12 basis-invariant) */}
+              <section className="bg-slate-50 border border-slate-200 p-4 rounded">
+                <h2 className="text-[20px] font-semibold text-slate-800 mb-4">
+                  Final-year wealth share by tier
+                </h2>
+                {donutOption !== null && (
+                  <DonutChart option={donutOption} caption={SHARE_CAPTION} />
+                )}
+                <p className="text-sm font-normal text-slate-500 mt-1">
+                  Shares are identical in real and nominal terms — the real/nominal toggle does not affect this view.
+                </p>
               </section>
             </>
           )}
