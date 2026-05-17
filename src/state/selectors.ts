@@ -1,9 +1,11 @@
 // Source: RESEARCH.md §"Pattern 1: Selector Function" and §"Pattern Map"
 // Plan 02 fills in full EChartsOption construction for VIZ-01/02/03.
 // Plan 03 fills in full implementations for VIZ-04/05/06.
+// Plan 04.1-02 adds VIZ-07: selectShareOption, selectDonutOption, SHARE_CAPTION.
 import type { EChartsOption } from 'echarts';
 import type { CallbackDataParams } from 'echarts/types/dist/shared.js';
 import type { ProjectionResult, SourceRecord } from '../core/types.js';
+import type { BandShare } from '../core/tierBands.js';
 
 // ---------------------------------------------------------------------------
 // Color palette constants (03-UI-SPEC.md §"Color")
@@ -394,6 +396,251 @@ export interface Summary {
   cagr: number;           // (end/start)^(1/years) - 1
   startRank: number;      // relativePosition[0].userRank   (0–100, basis-independent)
   endRank: number;        // relativePosition[last].userRank
+}
+
+// ---------------------------------------------------------------------------
+// VIZ-07 type re-exports
+// ---------------------------------------------------------------------------
+
+export type { BandShare };
+export type BandShareSeries = BandShare[];
+
+// ---------------------------------------------------------------------------
+// VIZ-07: SHARE_CAPTION — verbatim D-16 mandatory caption (UI-SPEC §Copywriting,
+// NEUTRALITY-STYLE-GUIDE §7). Phase 5 NEUT-02 verifies DOM text equals this constant.
+// DO NOT paraphrase. The byte-exact equality is enforced by the selectors test.
+// ---------------------------------------------------------------------------
+
+/**
+ * D-16 mandatory caption for both Chart 4 (stacked-area) and Chart 5 (donut).
+ * Must remain byte-identical to NEUTRALITY-STYLE-GUIDE Section 7 authored in Plan 03.
+ */
+export const SHARE_CAPTION =
+  "This shows each tier's share of total projected wealth. Shares can shift over time while every tier's real wealth still grows — a falling share does not mean falling wealth, only that another tier is compounding faster. See the wealth-by-tier chart above for absolute amounts.";
+
+// ---------------------------------------------------------------------------
+// VIZ-07: selectShareOption — 100%-stacked-area + user-position line
+// ---------------------------------------------------------------------------
+
+/**
+ * selectShareOption — maps BandShare[] + ProjectionResult to an EChartsOption
+ * for Chart 4 (100%-stacked-area with hidden-axis user-position line).
+ *
+ * D-02 / D-03 / D-09: five band series in poorest-at-bottom order with
+ * population-range names. Each series: type:'line', stack:'100%', areaStyle.
+ * D-04: colors from the locked hue↔band map (existing COLORS constants only).
+ * D-05: NO user band slice (contained within band — would double-count).
+ * D-06: user line as series[5] on hidden second y-axis (yAxisIndex:1), tracing
+ * per-year userPercentile×100 across the horizon.
+ *
+ * RESEARCH Pattern 3 Pitfall 1 mitigation: two-element yAxis array; [1] show:false
+ * to prevent ECharts from rendering a duplicate axis label column.
+ * T-03-03: all tooltip/label strings derived from numeric model output only.
+ */
+export function selectShareOption(
+  bandSeries: BandShare[],
+  result: ProjectionResult,
+): EChartsOption {
+  // Helper: build [year, value×100] data array for a band field
+  const bandData = (getter: (b: BandShare) => number): [number, number][] =>
+    bandSeries.map((b) => [b.year, getter(b) * 100]);
+
+  // Stacked-area band series in D-09 order: poorest at bottom (series[0]), richest at top
+  const bandSeriesDefs: Array<{
+    name: string;
+    color: string;
+    getter: (b: BandShare) => number;
+  }> = [
+    { name: 'Bottom 50%', color: COLORS.median, getter: (b) => b.bottom50 },
+    { name: '50–90%', color: COLORS.top10, getter: (b) => b.band50to90 },
+    { name: '90–99%', color: COLORS.top1, getter: (b) => b.band90to99 },
+    { name: '99–99.9%', color: COLORS.top01, getter: (b) => b.band99to999 },
+    { name: 'Top 0.1%', color: COLORS.user, getter: (b) => b.top01 },
+  ];
+
+  return {
+    grid: { top: 24, right: 16, bottom: 32, left: 48 },
+    xAxis: {
+      type: 'value',
+      name: 'Year',
+      nameTextStyle: { fontSize: 14, fontWeight: 400 },
+      axisLabel: { fontSize: 14, fontWeight: 400 },
+    },
+    // Two-element yAxis array (RESEARCH Pattern 3 Pitfall 1 — hidden-axis landmine):
+    // [0] visible 0–100% axis for band shares; [1] hidden mirror for user line.
+    yAxis: [
+      {
+        type: 'value',
+        min: 0,
+        max: 100,
+        name: 'Share of total wealth (%)',
+        nameTextStyle: { fontSize: 14, fontWeight: 400 },
+        axisLabel: {
+          fontSize: 14,
+          fontWeight: 400,
+          formatter: (v: number) => `${v}%`,
+        },
+      },
+      {
+        type: 'value',
+        min: 0,
+        max: 100,
+        show: false, // hidden second axis for user-position line (Pitfall 1 mitigation)
+      },
+    ],
+    legend: {
+      show: true,
+      data: bandSeriesDefs.map((s) => s.name),
+      textStyle: { fontSize: 14, fontWeight: 400 },
+    },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      // T-03-03: strings derived from numeric model output only
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        const paramsArr = Array.isArray(params) ? params : [params];
+        if (!paramsArr.length) return '';
+        const dataIndex = paramsArr[0]!.dataIndex ?? 0;
+        const snap = result.series[dataIndex];
+        if (!snap) return '';
+        const year = snap.year;
+        const lines = paramsArr.map((p) => {
+          const val = Array.isArray(p.value) ? (p.value as number[])[1] ?? 0 : (p.value as number) ?? 0;
+          return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color ?? ''};margin-right:4px;"></span>${p.seriesName ?? ''}: ${val.toFixed(1)}%`;
+        });
+        return `Year ${year}<br/>${lines.join('<br/>')}`;
+      },
+    },
+    series: [
+      // series[0..4]: five stacked band areas (D-09 order, D-03 population-range names)
+      ...bandSeriesDefs.map((def) => ({
+        type: 'line' as const,
+        name: def.name,
+        stack: '100%',
+        areaStyle: {},
+        yAxisIndex: 0,
+        data: bandData(def.getter),
+        lineStyle: { color: def.color, width: 1.5 },
+        itemStyle: { color: def.color },
+        showSymbol: false,
+        emphasis: { focus: 'series' as const },
+      })),
+      // series[5]: user-position line (D-05/D-06 — no band slice, dashed line on hidden axis)
+      {
+        type: 'line' as const,
+        name: 'Your position',
+        yAxisIndex: 1, // hidden second y-axis (Pitfall 1 mitigation)
+        // NO stack key — user line must NOT stack with the band areas
+        data: result.series.map((s) => [s.year, s.userPercentile * 100]),
+        lineStyle: { color: COLORS.user, width: 3.5, type: 'dashed' },
+        itemStyle: { color: COLORS.user },
+        showSymbol: false,
+        endLabel: {
+          show: true,
+          formatter: () => 'You',
+          color: COLORS.user,
+          fontSize: 12,
+          fontWeight: 600,
+        },
+      },
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// VIZ-07: selectDonutOption — final-year wealth-share donut
+// ---------------------------------------------------------------------------
+
+/**
+ * selectDonutOption — maps final-year BandShare + ProjectionResult to an
+ * EChartsOption for Chart 5 (final-year donut).
+ *
+ * D-02 / D-03 / D-09: five data items in poorest-at-bottom order with
+ * population-range names and locked hues.
+ * D-07: user's final-year band has borderColor:'#1E293B', borderWidth:3,
+ * label.fontWeight:600. Do NOT use selected:true (Pitfall 4).
+ * D-08: graphic center label shows topSetPercentile-derived percentage + year.
+ * T-03-03: center label and tooltip derived from numeric model output only.
+ */
+export function selectDonutOption(
+  bandSeries: BandShare[],
+  result: ProjectionResult,
+): EChartsOption {
+  const last = result.series[result.series.length - 1]!;
+  const lb = bandSeries[bandSeries.length - 1]!;
+
+  // Map userPercentile to band index (D-09 order: 0=Bottom50%, 4=Top0.1%)
+  // Thresholds: <0.5 → 0, <0.9 → 1, <0.99 → 2, <0.999 → 3, else → 4
+  const p = last.userPercentile;
+  const userBandIdx = p < 0.5 ? 0 : p < 0.9 ? 1 : p < 0.99 ? 2 : p < 0.999 ? 3 : 4;
+
+  // Five data items in D-09 order
+  const data = [
+    { name: 'Bottom 50%', value: +(lb.bottom50 * 100).toFixed(2), itemStyle: { color: COLORS.median } },
+    { name: '50–90%', value: +(lb.band50to90 * 100).toFixed(2), itemStyle: { color: COLORS.top10 } },
+    { name: '90–99%', value: +(lb.band90to99 * 100).toFixed(2), itemStyle: { color: COLORS.top1 } },
+    { name: '99–99.9%', value: +(lb.band99to999 * 100).toFixed(2), itemStyle: { color: COLORS.top01 } },
+    { name: 'Top 0.1%', value: +(lb.top01 * 100).toFixed(2), itemStyle: { color: COLORS.user } },
+  ] as Array<{
+    name: string;
+    value: number;
+    itemStyle: { color: string; borderColor?: string; borderWidth?: number };
+    label?: { show?: boolean; fontWeight?: number };
+  }>;
+
+  // D-07: highlight user band with neutral outline only (NOT selected:true — Pitfall 4)
+  data[userBandIdx]!.itemStyle.borderColor = '#1E293B';
+  data[userBandIdx]!.itemStyle.borderWidth = 3;
+  data[userBandIdx]!.label = { show: true, fontWeight: 600 };
+
+  // D-08: center label — topSetPercentile-derived, numeric only (T-03-03, NEUTRALITY §1 no '!')
+  const topPct = (100 - last.topSetPercentile * 100).toFixed(1);
+  const centerText = `Top ${topPct}%\nhold ≥50%\n(year ${last.year})`;
+
+  return {
+    tooltip: {
+      trigger: 'item',
+      confine: true,
+      // T-03-03: numeric-only tooltip
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        const p = Array.isArray(params) ? params[0] : params;
+        if (!p) return '';
+        const name = p.name ?? '';
+        const pct = typeof p.percent === 'number' ? p.percent.toFixed(1) : '0.0';
+        return `${name}: ${pct}%`;
+      },
+    },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: 'middle',
+        style: {
+          text: centerText,
+          fontSize: 13,
+          fill: '#475569', // slate-600
+        },
+      },
+    ],
+    legend: {
+      show: true,
+      data: data.map((d) => d.name),
+      textStyle: { fontSize: 14, fontWeight: 400 },
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: ['40%', '70%'],
+        startAngle: 90,
+        label: {
+          formatter: '{b}: {d}%',
+          fontSize: 12,
+          fontWeight: 400,
+        },
+        data,
+      },
+    ],
+  };
 }
 
 /**
