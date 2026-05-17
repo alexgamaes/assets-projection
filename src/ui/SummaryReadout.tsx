@@ -49,9 +49,10 @@ export function SummaryReadout({ summary, basis, inflationRate, inflationSourceN
         </div>
       </dl>
 
-      {/* D-14: rank delta — ALWAYS paired with wealth-growth clause via formatRankDelta */}
+      {/* D-14: rank delta — ALWAYS paired with wealth-growth clause via formatRankDelta;
+           realGrowthMultiple is always real-basis (basis-invariant per §6/D-14) */}
       <p className="text-sm font-normal text-slate-600 mt-4 tabular-nums">
-        {formatRankDelta(summary.startRank, summary.endRank, summary.growthMultiple)}
+        {formatRankDelta(summary.startRank, summary.endRank, summary.realGrowthMultiple)}
       </p>
 
       {/* D-15: neutral disclosure — rank can move down while wealth grows */}

@@ -92,8 +92,11 @@ export function AppShell() {
     [bandShares, rawResult],
   );
 
-  // D-13: summary metrics (only when result is non-null)
-  const summary = useMemo(() => (result !== null ? selectSummary(result) : null), [result]);
+  // D-13: summary metrics — thread rawResult for D-14 realGrowthMultiple (always real-basis)
+  const summary = useMemo(
+    () => (result !== null && rawResult !== null ? selectSummary(result, rawResult) : null),
+    [result, rawResult],
+  );
 
   // VIZ-06: citation footer — computed once
   const citations = useMemo(() => selectCitationFooter(SOURCES), []);
