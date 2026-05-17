@@ -17,11 +17,15 @@ import {
   formatWealth,
   selectReinflated,
   selectSummary,
+  selectShareOption,
+  selectDonutOption,
+  SHARE_CAPTION,
 } from '../selectors.js';
 import type { Summary } from '../selectors.js';
 import { makeSyntheticParams, syntheticInputs } from '../../core/__tests__/testUtils.js';
 import { projectionEngine } from '../../core/engine.js';
 import { SOURCES } from '../../data/sources.js';
+import { deriveBandShares } from '../../core/tierBands.js';
 
 // ---------------------------------------------------------------------------
 // Shared fixture — short horizon for fast tests
@@ -471,5 +475,152 @@ describe('ENTRY-05: selectSummary', () => {
     const nominalResult = selectReinflated(result, 'nominal', 0.025);
     const nominalSummary: Summary = selectSummary(nominalResult);
     expect(nominalSummary.endRank).toBe(realSummary.endRank);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VIZ-07: selectShareOption, selectDonutOption, SHARE_CAPTION
+// ---------------------------------------------------------------------------
+
+describe('VIZ-07: selectShareOption', () => {
+  // Derive BandShare[] from the same shared fixture (horizon 5 → 6 years)
+  const bandSeries = deriveBandShares(result.series);
+
+  it('returns EChartsOption with exactly 6 series (5 band areas + 1 user line)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as unknown[];
+    expect(series).toHaveLength(6);
+  });
+
+  it('D-02/D-03: series[0].name is "Bottom 50%" (poorest-at-bottom, D-09 order)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ name: string }>;
+    expect(series[0]?.name).toBe('Bottom 50%');
+  });
+
+  it('D-02/D-03: series[4].name is "Top 0.1%" (population-range label, D-09 order)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ name: string }>;
+    expect(series[4]?.name).toBe('Top 0.1%');
+  });
+
+  it('D-05/D-06: series[5] (user line) has yAxisIndex === 1 (hidden second axis)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ yAxisIndex?: number }>;
+    expect(series[5]?.yAxisIndex).toBe(1);
+  });
+
+  it('D-05: series[0..4] are on yAxisIndex 0 (band areas on main axis)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ yAxisIndex?: number }>;
+    for (const s of series.slice(0, 5)) {
+      expect(s.yAxisIndex).toBe(0);
+    }
+  });
+
+  it('D-06: series[5] has no "stack" key (user line must NOT be stacked)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ stack?: string }>;
+    expect(series[5]?.stack).toBeUndefined();
+  });
+
+  it('D-06: series[5] lineStyle.type is "dashed" (user findability cue)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ lineStyle?: { type?: string } }>;
+    expect(series[5]?.lineStyle?.type).toBe('dashed');
+  });
+
+  it('D-06: series[5] has endLabel with show:true and formatter returning "You"', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ endLabel?: { show?: boolean; formatter?: () => string } }>;
+    expect(series[5]?.endLabel?.show).toBe(true);
+    expect(series[5]?.endLabel?.formatter?.()).toBe('You');
+  });
+
+  it('yAxis is a 2-element array (RESEARCH Pattern 3 Pitfall 1 mitigation)', () => {
+    const option = selectShareOption(bandSeries, result);
+    expect(Array.isArray(option.yAxis)).toBe(true);
+    const yAxis = option.yAxis as unknown[];
+    expect(yAxis).toHaveLength(2);
+  });
+
+  it('D-04: series[0] (Bottom 50%) uses COLORS.median (#64748B)', () => {
+    const option = selectShareOption(bandSeries, result);
+    const series = option.series as Array<{ itemStyle?: { color: string } }>;
+    expect(series[0]?.itemStyle?.color).toBe('#64748B');
+  });
+});
+
+describe('VIZ-07: selectDonutOption', () => {
+  const bandSeries = deriveBandShares(result.series);
+
+  it('series[0].type is "pie"', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{ type: string }>;
+    expect(series[0]?.type).toBe('pie');
+  });
+
+  it('pie series data has exactly 5 items (D-02 five fixed bands)', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{ data: unknown[] }>;
+    expect(series[0]?.data).toHaveLength(5);
+  });
+
+  it('D-07: exactly one data item has itemStyle.borderColor === "#1E293B"', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{
+      data: Array<{ itemStyle?: { borderColor?: string; borderWidth?: number } }>;
+    }>;
+    const highlighted = series[0]!.data.filter(
+      (d) => d.itemStyle?.borderColor === '#1E293B',
+    );
+    expect(highlighted).toHaveLength(1);
+    expect(highlighted[0]?.itemStyle?.borderWidth).toBe(3);
+  });
+
+  it('D-07: no data item uses selected:true (Pitfall 4 avoided)', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{
+      data: Array<{ selected?: boolean }>;
+    }>;
+    for (const item of series[0]!.data) {
+      expect(item.selected).toBeUndefined();
+    }
+  });
+
+  it('D-09: data[0].name is "Bottom 50%" (poorest-at-bottom order)', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{ data: Array<{ name: string }> }>;
+    expect(series[0]?.data[0]?.name).toBe('Bottom 50%');
+  });
+
+  it('D-09: data[4].name is "Top 0.1%"', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const series = option.series as Array<{ data: Array<{ name: string }> }>;
+    expect(series[0]?.data[4]?.name).toBe('Top 0.1%');
+  });
+
+  it('D-08: graphic center label text is derived from topSetPercentile (non-empty string)', () => {
+    const option = selectDonutOption(bandSeries, result);
+    const graphics = option.graphic as Array<{ style?: { text?: string } }>;
+    const centerText = graphics[0]?.style?.text ?? '';
+    expect(centerText.length).toBeGreaterThan(0);
+    // Must contain the year and "hold ≥50%" phrasing (D-08)
+    expect(centerText).toContain('hold ≥50%');
+    // Must NOT contain an exclamation mark (NEUTRALITY-STYLE-GUIDE §1)
+    expect(centerText).not.toContain('!');
+  });
+});
+
+describe('VIZ-07: SHARE_CAPTION', () => {
+  // D-10 / D-16 / Phase 5 NEUT-02 enforcement: byte-exact equality
+  it('equals the verbatim D-16 mandatory caption template (byte-exact)', () => {
+    expect(SHARE_CAPTION).toBe(
+      "This shows each tier's share of total projected wealth. Shares can shift over time while every tier's real wealth still grows — a falling share does not mean falling wealth, only that another tier is compounding faster. See the wealth-by-tier chart above for absolute amounts.",
+    );
+  });
+
+  it('contains the key no-zero-sum clause phrase', () => {
+    expect(SHARE_CAPTION).toContain('a falling share does not mean falling wealth');
   });
 });
