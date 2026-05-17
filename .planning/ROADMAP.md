@@ -182,7 +182,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 05-02-PLAN.md — Surface the sourced JST survivorship caveat in CitationFooter (criterion 4)
+- [x] 05-02-PLAN.md — Surface the sourced JST survivorship caveat in CitationFooter (criterion 4)
 
 **Wave 3** *(blocked on Wave 1 + Wave 2)*
 
@@ -202,4 +202,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
 | 4.1. Tier Share-of-Economy Visualization | 3/3 | Complete   | 2026-05-17 |
-| 5. Neutrality Review & Release Readiness | 1/3 | In Progress|  |
+| 5. Neutrality Review & Release Readiness | 2/3 | In Progress|  |
