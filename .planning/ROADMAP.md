@@ -178,7 +178,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 05-01-PLAN.md — CR-01 fix: realGrowthMultiple field + two-arg selectSummary + AppShell/SummaryReadout wiring + pure D-14 regression test
+- [x] 05-01-PLAN.md — CR-01 fix: realGrowthMultiple field + two-arg selectSummary + AppShell/SummaryReadout wiring + pure D-14 regression test
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -202,4 +202,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
 | 4.1. Tier Share-of-Economy Visualization | 3/3 | Complete   | 2026-05-17 |
-| 5. Neutrality Review & Release Readiness | 0/3 | Not started | - |
+| 5. Neutrality Review & Release Readiness | 1/3 | In Progress|  |
