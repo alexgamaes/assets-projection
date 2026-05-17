@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact (completed 2026-05-16)
 - [x] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout (completed 2026-05-16)
 - [x] **Phase 4.1: Tier Share-of-Economy Visualization** - (INSERTED) 100%-stacked-area share-of-total trajectory + end-of-horizon donut for each tier and the user, with neutral no-zero-sum caption (completed 2026-05-17)
-- [ ] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide
+- [x] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide (completed 2026-05-17)
 
 ## Phase Details
 
@@ -186,7 +186,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 1 + Wave 2)*
 
-- [ ] 05-03-PLAN.md — Verbatim-caption equality assertions + exhaustive surface sweep → 05-NEUT-02-REVIEW.md (zero open FAIL rows) + §3 doc drift fix
+- [x] 05-03-PLAN.md — Verbatim-caption equality assertions + exhaustive surface sweep → 05-NEUT-02-REVIEW.md (zero open FAIL rows) + §3 doc drift fix
 
 **UI hint**: yes
 
@@ -202,4 +202,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
 | 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
 | 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
 | 4.1. Tier Share-of-Economy Visualization | 3/3 | Complete   | 2026-05-17 |
-| 5. Neutrality Review & Release Readiness | 2/3 | In Progress|  |
+| 5. Neutrality Review & Release Readiness | 3/3 | Complete   | 2026-05-17 |
