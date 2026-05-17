@@ -25,21 +25,20 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- ✓ Minimal entry: wealth + annual savings → instant projection on first paint — v1.0 (ENTRY-01..06)
+- ✓ Heterogeneous return model: return rate as a function of wealth percentile, grounded in corrected primary literature — v1.0 (MODEL-01..06, DATA-01..04)
+- ✓ Asset-price-inflation drag: scalar top-tier-growth drag, infinite-growth-preserving, no finite-pie/transfer — v1.0 (MODEL-04)
+- ✓ Relative-position tracking: rank/share over time + tier share-of-economy (stacked-area + donut) — v1.0 (VIZ-05, VIZ-07)
+- ✓ Clear visualization of exponential growth: 5 neutral chart types with log/linear toggle and tooltips — v1.0 (VIZ-01..07)
+- ✓ Historical-data-derived defaults with visible sourcing: citation-enforced `DEFAULTS`/`SOURCES`, build-gated — v1.0 (DATA-01..04)
+- ✓ Neutral, unbiased framing: NEUTRALITY-STYLE-GUIDE.md authored + enforced as a release gate, zero open FAIL — v1.0 (NEUT-01, NEUT-02)
+- ✓ Responsive web app on a modern maintainable stack: Vite 8 + React 19 + ECharts 6 + Zustand 5 + Tailwind v4 — v1.0
 
 ### Active
 
-<!-- Current scope. Building toward these. -->
+<!-- Current scope. Building toward these (next milestone). -->
 
-- [ ] Minimal entry: user inputs current wealth + annual savings and immediately sees a projection
-- [ ] Heterogeneous return model: return rate is a function of the user's wealth percentile/tier, grounded in empirical research (Fagereng et al. 2020, Bach et al. 2020, Saez & Zucman, Jordà-Schularick-Taylor)
-- [ ] Asset-price-inflation drag: aggregate top-tier compounding bids up asset prices and erodes the real return available to smaller savers (no finite-pie assumption — infinite growth still possible)
-- [ ] Relative-position tracking: show the user's wealth share / rank over time as higher tiers compound faster
-- [ ] Clear visualization of exponential growth (charts that make compounding and divergence legible)
-- [ ] Historical-data-derived default values for all model parameters (with visible sourcing)
-- [ ] Configurable settings: user can override defaults (return curve, drag strength, horizon, etc.) and experiment
-- [ ] Neutral, unbiased framing — neither a critique nor an endorsement of capitalism; just the mathematics
-- [ ] Responsive web app built on a modern, maintainable frontend framework
+- [ ] Configurable settings: user can override defaults (return curve, drag strength, tier anchors, horizon) and experiment — partially deferred from v1.0 (advanced overrides not yet exposed in UI)
 
 ### Out of Scope
 
@@ -84,12 +83,12 @@ These are the user's stated goals, in strict priority order. When tradeoffs aris
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Heterogeneous returns by wealth percentile (not flat rate) | Core differentiator; reflects empirical reality | — Pending |
-| Drag mechanism = asset-price inflation (not finite pie) | Allows infinite growth while still modeling top-tier impact on others | — Pending |
-| Minimal input = wealth + annual savings | Lowers friction; "let them start playing with it" | — Pending |
-| Public web app, no accounts | Personal tool shared publicly; no per-user persistence needed | — Pending |
-| Empirically-sourced defaults, configurable overrides | Neutral + grounded, but user can explore | — Pending |
-| Default tier anchors = median / top 10% / top 1% / top 0.1% (continuous interpolated curve, not buckets) | Literature reliably cites returns down to ~top 0.1%; deeper tiers aren't cleanly citeable (goal #4) | — Pending |
+| Heterogeneous returns by wealth percentile (not flat rate) | Core differentiator; reflects empirical reality | ✓ Good — shipped v1.0, strictly-monotone curve unit-tested |
+| Drag mechanism = asset-price inflation (not finite pie) | Allows infinite growth while still modeling top-tier impact on others | ✓ Good — scalar drag, non-conservation invariant tested (MODEL-04) |
+| Minimal input = wealth + annual savings | Lowers friction; "let them start playing with it" | ✓ Good — first-paint projection, no Calculate gate (ENTRY-01..06) |
+| Public web app, no accounts | Personal tool shared publicly; no per-user persistence needed | ✓ Good — static SPA, no backend/auth |
+| Empirically-sourced defaults, configurable overrides | Neutral + grounded, but user can explore | ⚠️ Revisit — defaults shipped & citation-gated; UI override surface deferred to v1.1 |
+| Default tier anchors = median / top 10% / top 1% / top 0.1% (continuous interpolated curve, not buckets) | Literature reliably cites returns down to ~top 0.1%; deeper tiers aren't cleanly citeable (goal #4) | ✓ Good — 4-anchor interpolated curve shipped; dynamic tail still a deferred follow-up |
 
 ## Follow-ups / Later Analysis
 
@@ -115,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-17 after Phase 5 (Neutrality Review & Release Readiness) completion*
+*Last updated: 2026-05-17 after v1.0 MVP milestone (Phases 1–5 shipped; audit status tech_debt — 25/25 requirements satisfied, browser-UAT/Nyquist polish deferred)*

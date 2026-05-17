@@ -1,205 +1,33 @@
 # Roadmap: Assets Projection
 
-## Overview
+## Milestones
 
-This project delivers a browser-only, correctness-first wealth-projection calculator whose differentiator is empirical grounding and heterogeneous returns by wealth tier. The model is the product, so the journey is strictly bottom-up: a pure, unit-tested projection engine is proven correct in isolation first; empirically-sourced parameters are calibrated against primary literature and injected into it second; the engine output is then made legible through neutral, citation-bearing visualizations; a minimal 2-input UI shell wraps everything as the access mechanism; and a final neutrality review gate ensures all shipped copy describes mechanism without editorializing. Nothing user-facing exists until the model beneath it is trustworthy.
+- ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-17) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 ## Phases
 
-**Phase Numbering:**
+<details>
+<summary>✅ v1.0 MVP (Phases 1–5) — SHIPPED 2026-05-17</summary>
 
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- [x] Phase 1: Model Foundation (4/4 plans) — completed 2026-05-16
+- [x] Phase 2: Empirical Data & Parameter Calibration (4/4 plans) — completed 2026-05-16
+- [x] Phase 3: Selectors, Visualization & Neutrality Style Guide (3/3 plans) — completed 2026-05-16
+- [x] Phase 4: UI Shell & Minimal Entry (3/3 plans) — completed 2026-05-16
+- [x] Phase 4.1: Tier Share-of-Economy Visualization (INSERTED) (3/3 plans) — completed 2026-05-17
+- [x] Phase 5: Neutrality Review & Release Readiness (3/3 plans) — completed 2026-05-17
 
-Decimal phases appear between their surrounding integers in numeric order.
+Full phase details, goals, success criteria, and plan breakdowns archived in
+[milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md).
 
-- [x] **Phase 1: Model Foundation** - Pure, deterministic, unit-tested projection engine with the nominal/real basis and non-conservation invariants baked in (completed 2026-05-16)
-- [x] **Phase 2: Empirical Data & Parameter Calibration** - Frozen, citation-annotated default parameter set with build-enforced sourcing, calibrated from corrected primary literature (completed 2026-05-16)
-- [x] **Phase 3: Selectors, Visualization & Neutrality Style Guide** - Three neutral chart types with linear/log toggle, tooltips, visible citations, and the neutrality style guide artifact (completed 2026-05-16)
-- [x] **Phase 4: UI Shell & Minimal Entry** - Responsive 2-input instant-projection shell with real/nominal toggle, horizon control, and summary readout (completed 2026-05-16)
-- [x] **Phase 4.1: Tier Share-of-Economy Visualization** - (INSERTED) 100%-stacked-area share-of-total trajectory + end-of-horizon donut for each tier and the user, with neutral no-zero-sum caption (completed 2026-05-17)
-- [x] **Phase 5: Neutrality Review & Release Readiness** - All shipped copy and chart semantics reviewed and signed off against the style guide (completed 2026-05-17)
-
-## Phase Details
-
-### Phase 1: Model Foundation
-
-**Goal**: A pure, framework-free, deterministic projection engine that computes year-by-year per-tier wealth — including heterogeneous returns, asset-price-inflation drag, and relative-position derivation — proven correct by numerical unit tests against synthetic citeable fixtures, with no UI or I/O dependency.
-**Mode:** mvp
-**Depends on**: Nothing (first phase)
-**Requirements**: MODEL-01, MODEL-02, MODEL-03, MODEL-04, MODEL-05, MODEL-06
-**Success Criteria** (what must be TRUE):
-
-  1. Running the engine test suite produces a verified year-by-year projection from `(inputs, params)` with zero framework/DOM/fetch imports in `core/`
-  2. The engine projects every wealth tier (not just the user's line), and a test confirms the user's trajectory uses the return rate for their moving tier
-  3. A unit test confirms drag=0 collapses to independent per-tier baseline, aggregate real wealth can grow unbounded, and no tier is forced to negative real wealth by drag alone (non-conservation, no transfer function)
-  4. Every parameter object carries an explicit nominal/real basis field; a test fails if a value of one basis is consumed where the other is expected
-  5. Engine output matches a closed-form compounding reference within a documented relative-error tolerance over the maximum horizon
-
-**Plans**: 4 plans
-Plans:
-
-- [x] 01-01-PLAN.md — Scaffold + branded basis invariant + Wave-0 test skeleton
-- [x] 01-02-PLAN.md — Lognormal+Pareto distribution curve with closed-form top-share (spike)
-- [x] 01-03-PLAN.md — Engine vertical slice: tiers + scalar drag + loop + golden master
-- [x] 01-04-PLAN.md — D-12 invariant battery + hand-derived multi-tier fixture
-
-### Phase 2: Empirical Data & Parameter Calibration
-
-**Goal**: A frozen, citation-annotated default parameter set (return-by-tier curve, drag strength, tier boundaries, horizon default) traced to corrected primary literature, with a build check that refuses any parameter lacking a complete source record.
-**Mode:** mvp
-**Depends on**: Phase 1
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04
-**Success Criteria** (what must be TRUE):
-
-  1. Every default model parameter carries a complete source record (source name, specific figure used, basis, definition, year/vintage, retrieved date) in a single sourced-parameter data model
-  2. The build/test pipeline fails when any model parameter lacks a complete source record (sourcing is an enforced invariant, not a convention)
-  3. The return-by-tier anchors reflect the corrected Fagereng framing (raw ~500bp / ~10pp net-of-tax association — NOT a flat 18pp per-tier gap), triangulated across cited anchors, with no single hardcoded "18" in the engine
-  4. The drag-strength parameter has a documented derivation anchored to the McKinsey ~80% figure without implying a finite-pie transfer
-  5. The engine, running on these real defaults, produces a divergence sanity-check that no tier exceeds plausible bounds within the default horizon
-
-**Plans**: 4 plans
-Plans:
-**Wave 1**
-
-- [x] 02-01-PLAN.md — CR-01/CR-02 fail-loud guards + negative tests (must merge green before any real data)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 02-02-PLAN.md — SourceRecord type migration + Phase 1 fixture migration
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 02-03-PLAN.md — Triangulated calibrated defaults + citation registry + PROJECT.md ~18pp correction
-
-**Wave 4** *(blocked on Wave 3 completion)*
-
-- [x] 02-04-PLAN.md — Sourcing-completeness gate + dragStrength back-solve + divergence sanity + D-09 invariant re-run
-
-### Phase 3: Selectors, Visualization & Neutrality Style Guide
-
-**Goal**: The engine's output is made legible through three neutral chart types (time-series growth, multi-tier divergence overlay, relative-position trajectory) driven by memoized selectors, with a linear/log toggle, hover/tap tooltips, visible source citations, and an explicit neutrality style guide artifact governing copy and palette.
-**Mode:** mvp
-**Depends on**: Phase 2
-**Requirements**: VIZ-01, VIZ-02, VIZ-03, VIZ-04, VIZ-05, VIZ-06, NEUT-01
-**Success Criteria** (what must be TRUE):
-
-  1. A time-series wealth chart renders the user's trajectory over the horizon, fed by memoized selectors (charts never transform raw engine output inline)
-  2. A linear/log scale toggle is present with neutral plain-language copy explaining what each scale reveals
-  3. Hover/tap tooltips show year, wealth, percentile/rank, and tier at the inspected point
-  4. A multi-tier comparison overlay plots the user vs. median/top 1%/top 0.1% in one frame, and a separate relative-position trajectory shows the user's wealth share/rank changing over the horizon
-  5. Visible source citations (footer minimum) trace displayed defaults to named research, and a neutrality style guide artifact (copy + palette rules, no value-laden red/green) exists before any user-facing copy is finalized
-
-**Plans**: 3 plans
-Plans:
-**Wave 1**
-
-- [x] 03-01-PLAN.md — Scaffold: replace package.json, vite.config.ts, tsconfig JSX, Zustand store, selector test stubs
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 03-02-PLAN.md — Selector layer (VIZ-01/02/03) + TimeSeriesChart + LogLinearToggle + HarnessPage (Chart 1 visible)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 03-03-PLAN.md — Selectors VIZ-04/05/06 + DivergenceChart + RelativePosChart + CitationFooter + complete HarnessPage + neutrality style guide
-
-### Phase 4: UI Shell & Minimal Entry
-
-**Goal**: A responsive UI shell where the user enters current wealth + annual savings and immediately sees a projection (no Calculate gate), with live debounced recompute, an adjustable horizon, a real/nominal toggle, and a summary readout — the access mechanism around the proven model.
-**Mode:** mvp
-**Depends on**: Phase 3
-**Requirements**: ENTRY-01, ENTRY-02, ENTRY-03, ENTRY-04, ENTRY-05, ENTRY-06
-**Success Criteria** (what must be TRUE):
-
-  1. On first paint, entering current wealth + annual savings renders a projection with no Calculate button, all other parameters defaulted from the empirical data layer
-  2. Changing an input recomputes the projection live, debounced for slider drags, with no UI jank
-  3. The user can adjust the projection horizon (default ~30–40y, up to ~50–60y) and toggle real vs. nominal view (real is the default)
-  4. A summary readout shows ending wealth, growth multiple, and CAGR
-  5. The layout is usable across mobile and desktop, with chart interactions degrading gracefully to touch
-
-**Plans**: 3 plans
-Plans:
-**Wave 1**
-
-- [x] 04-01-PLAN.md — Wave-0 test stubs + cited seed defaults (seedWealth, inflationRate) + Zustand store actions (setInputs/setHorizon/setBasis)
-
-**Wave 2** *(blocked on Wave 1)*
-
-- [x] 04-02-PLAN.md — selectReinflated + selectSummary selectors + LogSliderInput, HorizonSlider, BasisToggle, SummaryReadout UI primitives
-
-**Wave 3** *(blocked on Wave 2)*
-
-- [x] 04-03-PLAN.md — AppShell + ControlPanel + main.tsx wiring + neutrality style guide D-09/D-15 seeding + human verify checkpoint
-
-### Phase 4.1: Tier Share-of-Economy Visualization (INSERTED)
-
-**Goal**: Make wealth concentration legible as a *share of the whole*: each percentile tier (median p50, top10 p90, top1 p99, top01 p99.9) and the user are shown as a fraction of total distribution wealth, both as a trajectory over the horizon and as a final-year snapshot — so the reader sees not just that tiers diverge in level but how the composition of total wealth shifts over time. Inserted before Neutrality Review so Phase 5 reviews this chart's copy and palette.
-**Mode:** mvp
-**Depends on**: Phase 4
-**Requirements**: VIZ-07
-**Success Criteria** (what must be TRUE):
-
-  1. The engine/selector layer computes each tier's wealth mass and its fraction of total distribution wealth per horizon year (today only userShare/topSetPercentile exist — no per-tier share series)
-  2. A 100%-stacked-area chart renders each tier's + the user's share of total wealth across every horizon year, composed into AppShell
-  3. An end-of-horizon donut summarizes the final-year share split for the same groups
-  4. Both charts reuse the existing categorical palette — no semantic red/green, no new hue (D-03)
-  5. Each chart carries a mandatory neutral caption clarifying shares can shift while every tier's real wealth still grows (no zero-sum implication), consistent with the D-15 disclosure pattern
-  6. Shares are fractions of total, so they are basis-invariant — the view must not change with the real/nominal toggle; this is asserted in tests
-
-**Plans**: 3 plans
-Plans:
-**Wave 0**
-
-- [x] 04.1-01-PLAN.md — Pure engine: deriveBandShares + Wave-0 test suite (band-sum, Pareto fixture, D-12 basis-invariance)
-
-**Wave 1** *(blocked on Wave 0)*
-
-- [x] 04.1-02-PLAN.md — selectShareOption/selectDonutOption + SHARE_CAPTION + TierShareChart/DonutChart + VIZ-07 selector tests
-
-**Wave 2** *(blocked on Wave 1)*
-
-- [x] 04.1-03-PLAN.md — NEUTRALITY-STYLE-GUIDE D-16 Section 7 + AppShell composition (Chart 4 + Chart 5) + human-verify checkpoint
-
-### Phase 5: Neutrality Review & Release Readiness
-
-**Goal**: Every on-screen narrative annotation, label, microcopy string, and chart palette decision shipped in Phases 3, 4, and 4.1 is reviewed against the neutrality style guide and corrected, so the released tool describes mechanism as fact without assigning blame or virtue. The carried CR-01 D-14 mislabel is fixed and the JST survivorship caveat is surfaced; Phase 5 exits with zero open FAIL rows in `05-NEUT-02-REVIEW.md`.
-**Mode:** mvp
-**Depends on**: Phase 4
-**Requirements**: NEUT-02
-**Success Criteria** (what must be TRUE):
-
-  1. Every user-facing string and chart palette choice has been checked against the NEUT-01 style guide with a recorded pass/fail per item
-  2. No value-laden adjectives/verbs, alarm punctuation, or semantic red/green remain in any shipped surface
-  3. The relative-position chart carries a neutral caption clarifying shares can diverge while all wealth still grows (no zero-sum implication)
-  4. Long-run-historical defaults surface their survivorship caveat neutrally in the sourcing affordance
-
-**Plans**: 3 plans
-Plans:
-**Wave 1**
-
-- [x] 05-01-PLAN.md — CR-01 fix: realGrowthMultiple field + two-arg selectSummary + AppShell/SummaryReadout wiring + pure D-14 regression test
-
-**Wave 2** *(blocked on Wave 1)*
-
-- [x] 05-02-PLAN.md — Surface the sourced JST survivorship caveat in CitationFooter (criterion 4)
-
-**Wave 3** *(blocked on Wave 1 + Wave 2)*
-
-- [x] 05-03-PLAN.md — Verbatim-caption equality assertions + exhaustive surface sweep → 05-NEUT-02-REVIEW.md (zero open FAIL rows) + §3 doc drift fix
-
-**UI hint**: yes
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 5
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Model Foundation | 4/4 | Complete   | 2026-05-16 |
-| 2. Empirical Data & Parameter Calibration | 4/4 | Complete   | 2026-05-16 |
-| 3. Selectors, Visualization & Neutrality Style Guide | 3/3 | Complete   | 2026-05-16 |
-| 4. UI Shell & Minimal Entry | 3/3 | Complete   | 2026-05-16 |
-| 4.1. Tier Share-of-Economy Visualization | 3/3 | Complete   | 2026-05-17 |
-| 5. Neutrality Review & Release Readiness | 3/3 | Complete   | 2026-05-17 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+| ----- | --------- | -------------- | -------- | ---------- |
+| 1. Model Foundation | v1.0 | 4/4 | Complete | 2026-05-16 |
+| 2. Empirical Data & Parameter Calibration | v1.0 | 4/4 | Complete | 2026-05-16 |
+| 3. Selectors, Visualization & Neutrality Style Guide | v1.0 | 3/3 | Complete | 2026-05-16 |
+| 4. UI Shell & Minimal Entry | v1.0 | 3/3 | Complete | 2026-05-16 |
+| 4.1. Tier Share-of-Economy Visualization | v1.0 | 3/3 | Complete | 2026-05-17 |
+| 5. Neutrality Review & Release Readiness | v1.0 | 3/3 | Complete | 2026-05-17 |

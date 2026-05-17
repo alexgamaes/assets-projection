@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: milestone_complete
-stopped_at: Milestone complete (Phase 05 was final phase)
-last_updated: 2026-05-17T07:30:01.211Z
-last_activity: 2026-05-17 -- Phase 05 execution started
+status: Awaiting next milestone
+stopped_at: Phase 5 context gathered
+last_updated: "2026-05-17T07:42:57.631Z"
+last_activity: 2026-05-17 — Milestone v1.0 completed and archived
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 20
   completed_plans: 20
-  percent: 83
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-15)
 
 ## Current Position
 
-Phase: 05
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-05-17
-
-Progress: [░░░░░░░░░░] 0%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-17 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -91,14 +89,29 @@ None yet.
 
 ## Deferred Items
 
-Items acknowledged and carried forward from previous milestone close:
+Items acknowledged and deferred at milestone close on 2026-05-17 (v1.0):
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| quick_task | 260516-lpb-make-the-users-wealth-line-easier-to-rea | missing (false-positive — done in commit 070728b) | v1.0 |
+| uat_gap | 02-HUMAN-UAT.md | partial (1 browser scenario) | v1.0 |
+| uat_gap | 03-HUMAN-UAT.md | partial (5 browser scenarios) | v1.0 |
+| uat_gap | 04-HUMAN-UAT.md | partial (6 browser scenarios) | v1.0 |
+| uat_gap | 05-HUMAN-UAT.md | partial (3 browser scenarios) | v1.0 |
+| verification_gap | 01-VERIFICATION.md | human_needed (automated passed) | v1.0 |
+| verification_gap | 02-VERIFICATION.md | human_needed (automated passed) | v1.0 |
+| verification_gap | 03-VERIFICATION.md | human_needed (automated passed) | v1.0 |
+| verification_gap | 04-VERIFICATION.md | human_needed (automated passed) | v1.0 |
+| verification_gap | 05-VERIFICATION.md | human_needed (automated passed) | v1.0 |
+| nyquist | Phases 02, 03, 04.1, 05 | partial (nyquist_compliant=false) | v1.0 |
+| perf | ECharts bundle ~446kB gzip | non-blocking advisory | v1.0 |
 
 ## Session Continuity
 
 Last session: 2026-05-17T05:44:49.043Z
 Stopped at: Phase 5 context gathered
 Resume file: .planning/phases/05-neutrality-review-release-readiness/05-CONTEXT.md
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
