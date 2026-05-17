@@ -597,10 +597,11 @@ export function selectDonutOption(
   // shiftScaleCurve fallback / out-of-domain anchors) surface an explicit
   // "calibration unavailable" state instead of asserting a precise concentration
   // figure (CR-01 / WR-05). T-03-03: numeric-only; NEUTRALITY §1: no '\!'.
-  // Non-degraded: report the cumulative share held by the top 1% (the three
-  // richest bands the donut renders) so the number is consistent by
-  // construction with the visible slices (WR-01).
-  const top1Share = lb.top01 + lb.band99to999 + lb.band90to99;
+  // Non-degraded: report the cumulative share held by the top 1% — i.e. the
+  // p99-and-above population: the top-0.1% band plus the 99–99.9% band ONLY.
+  // (CR-01: the 90–99% band is the top 10%, not the top 1%; including it
+  // materially overstated concentration on a public chart.)
+  const top1Share = lb.top01 + lb.band99to999;
   const centerText = lb.degraded
     ? `Beyond model domain\n(year ${last.year})`
     : `Top 1% hold\n${(top1Share * 100).toFixed(1)}%\n(year ${last.year})`;

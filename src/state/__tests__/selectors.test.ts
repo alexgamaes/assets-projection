@@ -622,8 +622,10 @@ describe('VIZ-07: selectDonutOption', () => {
       // "beyond model domain" terminal state, never a fabricated figure
       expect(centerText).toContain('Beyond model domain');
     } else {
-      // WR-01: the reported figure is the top-1% share of the SAME bands drawn
-      const expected = (lb.top01 + lb.band99to999 + lb.band90to99) * 100;
+      // CR-01/WR-04: the reported figure is the TRUE top-1% share (p99 and
+      // above): top-0.1% band + 99–99.9% band only. The 90–99% band is the
+      // top 10% and must NOT be included.
+      const expected = (lb.top01 + lb.band99to999) * 100;
       expect(centerText).toContain('Top 1% hold');
       expect(centerText).toContain(`${expected.toFixed(1)}%`);
     }
