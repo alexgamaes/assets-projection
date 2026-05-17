@@ -1,6 +1,6 @@
 # Neutrality Style Guide
 
-**Version:** 1.0 — Phase 3 initial authoring
+**Version:** 1.1 — Phase 5 Plan 03: corrected §3 component reference (HarnessPage.tsx → AppShell.tsx/REL_POS_CAPTION); no rule changes
 **Authored against:** CONTEXT.md D-01 through D-04, 03-UI-SPEC.md
 **Phase 5 review gate:** This artifact is read directly from the repository during Phase 5 human review. It is not executable.
 
@@ -83,7 +83,9 @@ The relative-position chart (Chart 3) must always carry a visible fixed caption 
 
 > "This shows the user's rank within the distribution. Rank can move down while the user's real wealth still grows — every tier's wealth increases over this horizon. See the wealth-by-tier chart above for absolute amounts."
 
-This text is the exact string seeded into `src/ui/HarnessPage.tsx` as `REL_POS_CAPTION` and passed as a prop to `RelativePosChart`. Phase 5 must verify the visible DOM caption matches this text. Any revision to this text requires a corresponding update to this style guide (the two must remain in sync).
+This text is the exact string defined as `REL_POS_CAPTION` in `src/ui/AppShell.tsx` (lines 32–33) and passed as a prop to `RelativePosChart`. Phase 5 must verify the visible DOM caption matches this text. Any revision to this text requires a corresponding update to this style guide (the two must remain in sync).
+
+_Note: the Phase 3 authoring of this section referenced `src/ui/HarnessPage.tsx`, which does not exist in the shipped codebase. The shipped equivalent is `src/ui/AppShell.tsx`. This reference was corrected in Version 1.1 (Phase 5 Plan 03)._
 
 ---
 
