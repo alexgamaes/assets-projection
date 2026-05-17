@@ -38,15 +38,39 @@ export function formatWealth(v: number): string {
 // ---------------------------------------------------------------------------
 
 /**
+ * Single source of truth for percentile → band binning (WR-01 / WR-02).
+ * Both deriveTier (tooltip) and selectDonutOption (donut slices) MUST bin
+ * through this helper so the tooltip tier and the highlighted donut band
+ * always agree for the same input.
+ *
+ * D-09 band order (0 = poorest): 0=Bottom 50%, 1=50–90%, 2=90–99%,
+ * 3=99–99.9%, 4=Top 0.1%. Boundary convention: upper-exclusive `<`
+ * (a user exactly at 0.99 falls in index 2, exactly at 0.999 in index 3),
+ * applied identically by both call sites.
+ */
+function bandIndex(userPercentile: number): 0 | 1 | 2 | 3 | 4 {
+  if (userPercentile < 0.5) return 0;
+  if (userPercentile < 0.9) return 1;
+  if (userPercentile < 0.99) return 2;
+  if (userPercentile < 0.999) return 3;
+  return 4;
+}
+
+/**
+ * Human-readable tier labels indexed by bandIndex(). No label is "median"
+ * for any percentile in (0.5, 0.9) — that range is the "50–90%" band
+ * (WR-01: "median" was misleading copy for the entire lower-middle range).
+ */
+const BAND_LABELS = ['Bottom 50%', '50–90%', '90–99%', '99–99.9%', 'Top 0.1%'] as const;
+
+/**
  * Derive a human-readable tier label from a [0,1] percentile fraction.
- * VIZ-03: used in the time-series tooltip.
- * Thresholds: >= 0.999 → 'top 0.1%'; >= 0.99 → 'top 1%'; >= 0.90 → 'top 10%'; else → 'median'
+ * VIZ-03: used in the time-series tooltip. Bins through the SAME shared
+ * helper the donut uses (WR-01/WR-02) so tooltip tier and donut band are
+ * always consistent.
  */
 function deriveTier(userPercentile: number): string {
-  if (userPercentile >= 0.999) return 'top 0.1%';
-  if (userPercentile >= 0.99) return 'top 1%';
-  if (userPercentile >= 0.90) return 'top 10%';
-  return 'median';
+  return BAND_LABELS[bandIndex(userPercentile)];
 }
 
 // ---------------------------------------------------------------------------
@@ -567,10 +591,9 @@ export function selectDonutOption(
   const last = result.series[result.series.length - 1]!;
   const lb = bandSeries[bandSeries.length - 1]!;
 
-  // Map userPercentile to band index (D-09 order: 0=Bottom50%, 4=Top0.1%)
-  // Thresholds: <0.5 → 0, <0.9 → 1, <0.99 → 2, <0.999 → 3, else → 4
-  const p = last.userPercentile;
-  const userBandIdx = p < 0.5 ? 0 : p < 0.9 ? 1 : p < 0.99 ? 2 : p < 0.999 ? 3 : 4;
+  // Map userPercentile to band index via the SHARED helper (WR-01/WR-02) so
+  // the highlighted donut band always agrees with the tooltip tier label.
+  const userBandIdx = bandIndex(last.userPercentile);
 
   // Five data items in D-09 order
   const data = [
