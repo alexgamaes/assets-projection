@@ -326,7 +326,7 @@ export const DEFAULTS: Params = Object.freeze({
     // The ~1.3× asset/GDP ratio is explicitly NOT the calibration target (D-08 exclusion).
     // Formula for share: Σ_year[totalAnchorWealth(year-1) × assetInflation(year)] /
     //                    (totalAnchorWealth(horizon) − totalAnchorWealth(0))
-    value: 0.4325757739, // back-solved from McKinsey ~80% target (D-07/D-08)
+    value: 0.2094998675, // back-solved from McKinsey ~80% target against the Closure-A corrected model (D-07/D-08)
     basis: 'real' as const,
     source: Object.freeze({
       ...SOURCES.mckinsey2023,
@@ -334,7 +334,7 @@ export const DEFAULTS: Params = Object.freeze({
         'McKinsey ~80% asset-inflation share of 2000–2021 net-worth growth ' +
         '(back-solve target; ~1/5 from new saving/investment) — NOT the ~1.3× asset/GDP ratio (D-08)',
       note:
-        'D-07/D-08 BACK-SOLVED VALUE: this constant (0.4325757739) was derived by ' +
+        'D-07/D-08 BACK-SOLVED VALUE: this constant (0.2094998675) was derived by ' +
         'running projectionEngine on the calibrated DEFAULTS (anchors, returnByTier, savings, ' +
         'horizon=35 — the 2000–2021-like baseline, O-2) and bisect-solving for dragStrength ' +
         'such that the model\'s asset-inflation share of net-worth growth ≈ 0.80. ' +
@@ -344,8 +344,21 @@ export const DEFAULTS: Params = Object.freeze({
         'This maps to McKinsey "share of net-worth growth from asset-price inflation" ' +
         '(~80% for 2000–2021 advanced economies; ~1/5 from new saving/investment). ' +
         'The ~1.3× asset/GDP ratio is explicitly NOT the calibration target (D-08 exclusion). ' +
+        'RECALIBRATION NOTE (debug session model-alpha-domain-freeze, maintainer ' +
+        'decision LOCKED): this value was RE-DERIVED against the Closure-A ' +
+        'net-growth-floor corrected engine model. The cited McKinsey ~80% target ' +
+        'is UNCHANGED — only the back-solve OUTPUT changed because dragStrength is ' +
+        'a derived constant coupled to the engine dynamics, and the Closure-A floor ' +
+        '(which bounds the runaway top01/top1 tail ratio and pins the body-relative ' +
+        'ratios so the lognormal+Pareto curve stays in the CR-02/CR-01 calibration ' +
+        'domain for all horizons) changes the per-year asset-inflation trajectory. ' +
+        'The PRIOR value (0.4325757739) was back-solved against the pre-Closure-A ' +
+        'model whose endogenous evolution left the calibratable domain by ~year 11 ' +
+        '(the freeze defect this session resolved). Re-deriving against the corrected ' +
+        'model is the legitimate, documented update per the maintainer decision; the ' +
+        'sourced TARGET (McKinsey 80%) was not loosened or changed. ' +
         'Reproducible: calibration.test.ts back-solves this value and asserts ' +
-        'assetInflationShare(0.4325757739) ≈ 0.80 and value ≈ solved to 4 decimal places. ' +
+        'assetInflationShare(0.2094998675) ≈ 0.80 and value ≈ solved to 4 decimal places. ' +
         'McKinsey source: "The rise and rise of the global balance sheet" (2021).',
     }),
   }),

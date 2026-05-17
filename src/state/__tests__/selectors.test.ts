@@ -610,8 +610,9 @@ describe('VIZ-07: selectDonutOption', () => {
     expect(centerText).not.toContain('!');
     const lb = bandSeries[bandSeries.length - 1]!;
     if (lb.degraded) {
-      // CR-01/WR-05: explicit unavailable state, never a fabricated figure
-      expect(centerText).toContain('Calibration unavailable');
+      // CR-01/WR-05 + Option 4 (model-alpha-domain-freeze): explicit honest
+      // "beyond model domain" terminal state, never a fabricated figure
+      expect(centerText).toContain('Beyond model domain');
     } else {
       // WR-01: the reported figure is the top-1% share of the SAME bands drawn
       const expected = (lb.top01 + lb.band99to999 + lb.band90to99) * 100;

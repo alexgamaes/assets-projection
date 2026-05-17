@@ -397,46 +397,106 @@ describe('deriveBandShares: G1 regression — full-horizon sum + evolving concen
     }
   });
 
-  it('final-year top-0.1% share EVOLVES with horizon and does not freeze (G1)', () => {
+  it('final-year top-0.1% share EVOLVES with horizon and does not freeze (G1 + Closure A)', () => {
     const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
     const finalBand = (h: number) => {
       const result = projectionEngine(inputs, { ...DEFAULTS, horizon: h });
       const bands = deriveBandShares(result.series);
       return bands[bands.length - 1]!;
     };
-    // Calibrating regime (anchors still in-domain): concentration STRICTLY
-    // increases with horizon. Pre-fix every horizon was byte-identical
-    // (frozen at the last-calibrated year) — this is the core G1 assertion.
+    // REBASELINE (debug session model-alpha-domain-freeze, maintainer decision
+    // LOCKED): the OLD assertions here encoded the FREEZE BUG as expected — they
+    // asserted that at DEFAULTS the endogenous evolution leaves the calibration
+    // domain by ~year 11 (`expect(t20.degraded).toBe(true)`) and that 70–90% of
+    // a 60-year horizon is frozen/degraded. The Closure-A net-growth floor is
+    // the root-cause fix: at DEFAULTS the curve now stays in-domain for ALL
+    // horizons, so concentration rises every year (distinct per horizon) and
+    // then asymptotes — NO degraded year, NO freeze. These assertions now
+    // verify the corrected behavior (recomputed from the model, not loosened).
     const t3 = finalBand(3);
     const t5 = finalBand(5);
     const t8 = finalBand(8);
     const t10 = finalBand(10);
+    const t20 = finalBand(20);
+    const t60 = finalBand(60);
+    // No freeze: concentration strictly increases with horizon, every horizon
+    // distinct (pre-fix every horizon was byte-identical, frozen at year ~10).
     expect(t3.degraded).toBe(false);
     expect(t5.top01).toBeGreaterThan(t3.top01);
     expect(t8.top01).toBeGreaterThan(t5.top01);
     expect(t10.top01).toBeGreaterThan(t8.top01);
-    // The short-horizon final shares are all distinct (no freeze).
-    expect(new Set([t3.top01, t5.top01, t8.top01, t10.top01]).size).toBe(4);
-    // Out-of-domain regime: the engine shape-frozen shiftScaleCurve fallback
-    // takes over; the entry is flagged degraded so the donut surfaces an
-    // explicit unavailable state instead of a fabricated precise figure.
-    const t20 = finalBand(20);
-    expect(t20.degraded).toBe(true);
+    expect(t20.top01).toBeGreaterThan(t10.top01);
+    expect(new Set([t3.top01, t5.top01, t8.top01, t10.top01, t20.top01]).size).toBe(5);
+    // Closure A keeps DEFAULTS strictly in the calibration domain at every
+    // horizon — including the long horizons that pre-fix were degraded/frozen.
+    expect(t20.degraded).toBe(false);
+    expect(t60.degraded).toBe(false);
   });
 
-  it('out-of-domain (engine shiftScaleCurve fallback) years are flagged degraded but still sum to 1.0', () => {
+  it('Closure A: DEFAULTS stays in the calibration domain for the full 60-year horizon (no degraded year, no freeze)', () => {
     const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
     const result = projectionEngine(inputs, { ...DEFAULTS, horizon: 60 });
     const bands = deriveBandShares(result.series);
+    // Root-cause fix: ZERO degraded years at DEFAULTS over the full horizon
+    // (pre-fix ~70–90% of the horizon was the shape-frozen shiftScaleCurve
+    // fallback). Every per-year band still sums to 1.0.
     const degraded = bands.filter((b) => b.degraded);
-    // At default settings the endogenous ratio drifts out of domain within 60 years.
-    expect(degraded.length).toBeGreaterThan(0);
-    for (const b of degraded) {
+    expect(
+      degraded.length,
+      `Closure A must keep DEFAULTS in-domain for all 60 years; degraded years: ${degraded.map((d) => d.year).join(',')}`,
+    ).toBe(0);
+    for (const b of bands) {
       const sum = b.bottom50 + b.band50to90 + b.band90to99 + b.band99to999 + b.top01;
       expect(Math.abs(sum - 1.0)).toBeLessThan(DIST_TOL);
     }
-    // Year 0 is always a fresh calibration → never degraded.
     expect(bands[0]!.degraded).toBe(false);
+  });
+
+  // Mandatory regression (debug session model-alpha-domain-freeze, task #6):
+  // at DEFAULTS the model must stay strictly inside the Pareto finite-mean
+  // domain (α > 1, i.e. top01/top1 < 10) every year through horizon 60; the
+  // final-year top-0.1% share must be STRICTLY INCREASING in horizon
+  // (h35 < h60 < h100); and the trajectory must be a bounded plateau — rising
+  // then asymptoting — neither a runaway nor a reversion.
+  it('regression: DEFAULTS — α>1 every year to h60, final top-0.1% share strictly increasing h35<h60<h100, bounded plateau', () => {
+    const inputs = { currentWealth: SEED_WEALTH.value, annualSavings: DEFAULTS.savings.value };
+
+    // α > 1 (top01/top1 < 10) for every year through horizon 60.
+    const r60 = projectionEngine(inputs, { ...DEFAULTS, horizon: 60 });
+    for (const s of r60.series) {
+      const ratio = s.anchorWealth.top01 / s.anchorWealth.top1;
+      expect(
+        ratio,
+        `year ${s.year}: top01/top1=${ratio.toFixed(4)} must stay < 10 (Pareto α>1, CR-02 domain)`,
+      ).toBeLessThan(10);
+    }
+
+    const finalTop01 = (h: number) => {
+      const r = projectionEngine(inputs, { ...DEFAULTS, horizon: h });
+      const b = deriveBandShares(r.series);
+      return b[b.length - 1]!.top01;
+    };
+    const h35 = finalTop01(35);
+    const h60 = finalTop01(60);
+    const h100 = finalTop01(100);
+
+    // Strictly increasing in horizon (no freeze: pre-fix these were byte-identical).
+    expect(h35).toBeLessThan(h60);
+    expect(h60).toBeLessThan(h100);
+
+    // Bounded plateau: rose meaningfully early (y10 > y0) but the late
+    // increment (h35 → h100) is small relative to the early rise (asymptote,
+    // not runaway). Also strictly bounded below the Pareto-domain ceiling.
+    const b100 = deriveBandShares(projectionEngine(inputs, { ...DEFAULTS, horizon: 100 }).series);
+    const y0 = b100[0]!.top01;
+    const y10 = b100[10]!.top01;
+    const y60 = b100[60]!.top01;
+    expect(y10).toBeGreaterThan(y0); // rose
+    expect(y60).toBeGreaterThan(y10); // still rising past the first decade
+    const earlyRise = y10 - y0;
+    const lateRise = h100 - h35;
+    expect(lateRise).toBeLessThan(earlyRise); // plateau: late increment < early rise
+    expect(h100).toBeLessThan(0.5); // bounded well below a runaway
   });
 });
 

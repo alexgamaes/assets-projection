@@ -165,6 +165,169 @@ function shiftScaleCurve(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Closure A — tail-ratio asymptote net-growth floor (debug: model-alpha-domain-freeze)
+// ---------------------------------------------------------------------------
+
+/**
+ * RHO_MAX — asymptote ceiling on the evolved top01/top1 anchor ratio.
+ *
+ * Closure A (maintainer decision LOCKED, debug session model-alpha-domain-freeze):
+ * Under default `endogenous` evolution the heterogeneous per-tier returns
+ * (median 2.5% … top01 12%) compound TWO divergence drivers unbounded:
+ *   (1) ρ = top01/top1 — drives Pareto α = ln(10)/ln(ρ); ρ ≥ 10 ⇒ α ≤ 1
+ *       (CR-02 finite-mean domain — calibrateCurve throws).
+ *   (2) top1/median and top10/median — the body-vs-tail spread. When these run
+ *       away the lognormal body cannot stitch C0-continuously to the Pareto
+ *       tail and the stitch bisection in calibrateCurve fails to bracket a root
+ *       in [0.9001, 0.9999] (the implicit CR-01 stitch-domain limit). Probed:
+ *       at year-0 body shape, calibration fails once top1/median ≳ 50.
+ * Either failure freezes the engine into the shape-frozen shiftScaleCurve
+ * fallback ⇒ the VIZ-07 freeze + degraded years.
+ *
+ * Closure A floors the top tiers' NET growth (return − drag haircut) at the
+ * BODY's net growth: the body-relative ratios (top10/median, top1/median) are
+ * capped at their year-0 in-domain values so the curve stays calibratable, and
+ * ρ is capped at RHO_MAX so the tail index stays strictly inside the CR-02
+ * domain. Concentration RISES through the tail (ρ: year-0 ratio → RHO_MAX —
+ * the product's core thesis) then PLATEAUS at the ceilings (asymptote: a binding
+ * ratio makes that tier track the body's net growth ⇒ constant ratio ⇒
+ * stationary concentration that NEVER reverts; the clamp only ever pulls a
+ * would-be-LARGER ratio down to the ceiling, never below the prior value).
+ *
+ * RHO_MAX = 7.45 → α = ln(10)/ln(7.45) ≈ 1.146 > 1 with comfortable CR-02
+ * margin (α = 1 at ρ = 10) for ALL horizons through 100. Probed: at the
+ * year-0 body shape this yields a top-0.1% wealth share ≈ 0.40, reproducing
+ * the closure-ab-comparison proof cited in the maintainer decision (top-0.1%
+ * share 23% → ~39–40% then plateau; top01/top1 peaks ~7.45; 0 degraded years;
+ * distinct per horizon).
+ *
+ * NOT a silent clamp on the guard: CR-02/CR-01 are untouched and remain the
+ * loud detectors for any residual out-of-domain edge at extreme USER inputs
+ * (Option 4 honest "beyond model domain" terminal state handles that residual).
+ */
+const RHO_MAX = 7.45;
+
+/**
+ * Smoothly squash a natural tail ratio ρ_nat into [rho0, rhoCap).
+ *
+ * rhoCap = min(RHO_MAX, max(rho0, RHO_MAX)) — the asymptote ceiling. We never
+ * push concentration below where it starts: if the year-0 ratio rho0 is itself
+ * ≥ RHO_MAX (an already-extreme synthetic input) the cap is rho0 and the map is
+ * pure identity (the closure must NOT de-concentrate a distribution; it only
+ * bounds further runaway growth — "never reverts").
+ *
+ * map(ρ_nat) = rho0 + (rhoCap − rho0) · tanh((ρ_nat − rho0)/(rhoCap − rho0))
+ *
+ * Properties (exactly the maintainer-locked asymptote-floor shape):
+ *   - map(rho0)  = rho0                          (identity at the start — no
+ *                                                 de-concentration; preserves
+ *                                                 the year-0 calibration)
+ *   - strictly increasing in ρ_nat               (concentration never reverts)
+ *   - map(ρ_nat) → rhoCap as ρ_nat → ∞           (asymptote strictly < rhoCap
+ *                                                 ⇒ α > ln(10)/ln(rhoCap),
+ *                                                 always inside CR-02)
+ *   - the increment shrinks as ρ_nat grows       (rises then plateaus; the
+ *                                                 y35→y100 increment is small)
+ * For ρ_nat ≤ rho0 the natural ratio is returned unchanged.
+ *
+ * rho0 is the engine's ACTUAL year-0 tail ratio (captured per-run, not a
+ * hardcoded constant), so the closure is an exact no-op at year 0 for ANY
+ * input set and only damps growth ABOVE each run's own starting concentration.
+ *
+ * @param rhoNat - The natural evolved top01/top1 ratio this year.
+ * @param rho0   - The run's year-0 top01/top1 ratio.
+ */
+function squashRho(rhoNat: number, rho0: number): number {
+  const rhoCap = Math.max(RHO_MAX, rho0);
+  if (rhoNat <= rho0 || rhoCap <= rho0) return rhoNat;
+  const span = rhoCap - rho0;
+  return rho0 + span * Math.tanh((rhoNat - rho0) / span);
+}
+
+/**
+ * Year-0 ratios captured from the initial in-domain calibration anchors.
+ * Pinning the body-vs-tail spread at the year-0 (proven calibratable) ratios is
+ * exactly "floor the top tiers' net growth at the body's net growth": once a
+ * ceiling binds, that upper tier grows at the median's net rate, so the ratio
+ * is constant (stationary) and the lognormal body never runs out of stitch
+ * domain. Concentration still RISES via the tail (ρ → RHO_MAX) before
+ * plateauing. rho0 anchors the smooth tail asymptote to THIS run's starting
+ * concentration so the closure is an exact no-op at year 0 for any input.
+ */
+interface ClosureACeilings {
+  r10: number; // top10 / median ratio (year-0)
+  r1: number; // top1  / median ratio (year-0)
+  rho0: number; // top01 / top1 ratio (year-0)
+}
+
+function closureACeilings(initial: AnchorWealth): ClosureACeilings {
+  return {
+    r10: initial.top10 / initial.median,
+    r1: initial.top1 / initial.median,
+    rho0: initial.top1 > 0 ? initial.top01 / initial.top1 : RHO_MAX,
+  };
+}
+
+/**
+ * Apply the Closure-A net-growth floor to an evolved AnchorWealth.
+ *
+ * Floor mechanism — "floor the top tiers' NET growth at the BODY's net growth":
+ *   - top10 = ceilings.r10 · median   (body-shoulder tier tracks the body's net
+ *                                      growth exactly ⇒ ratio pinned at the
+ *                                      year-0 in-domain value: σ never collapses
+ *                                      and never reverts. This is the literal
+ *                                      net-growth floor — top10's net growth is
+ *                                      floored AND ceiled at the body's, so the
+ *                                      ratio is stationary.)
+ *   - top1  = ceilings.r1  · median   (top-1% tier tracks the body's net growth
+ *                                      ⇒ stitch domain preserved, stationary,
+ *                                      never reverts.)
+ *   - top01 ≤ RHO_MAX · top1          (one-sided asymptote cap: top-0.1% net
+ *                                      growth rises freely until ρ hits RHO_MAX
+ *                                      then is floored at top1's net growth ⇒
+ *                                      concentration RISES via the tail then
+ *                                      PLATEAUS strictly inside CR-02; never
+ *                                      reverts — the clamp only pulls a
+ *                                      would-be-larger ρ down to RHO_MAX.)
+ * The median (the body anchor) is NEVER modified, so absolute wealth keeps
+ * evolving every year; only the divergence drivers are bounded. Pinning the
+ * body-relative ratios is exact net-growth-flooring at the body (Closure A,
+ * maintainer-locked): top10/top1 grow at the median's net rate ⇒ the lognormal
+ * body shape is stationary and always calibratable; the only concentration
+ * dynamic is the tail ρ rising 6.0 → RHO_MAX (the product's core thesis) then
+ * plateauing. Probed at DEFAULTS: 0 degraded years for horizons 35/60/100,
+ * top-0.1% share 0.233 → ~0.40 monotone-then-plateau, distinct per horizon.
+ *
+ * Caller MUST gate this on `distributionEvolution === 'endogenous' &&
+ * dragStrength > 0` so the drag-off analytic golden master (D-11/MODEL-06) and
+ * the dragStrength=0 collapse invariant are byte-for-byte preserved.
+ *
+ * @param a - Evolved anchor wealth (post stepAnchorWealth).
+ * @param c - Year-0 body-relative ratio ceilings.
+ * @returns Anchor wealth with the net-growth floor applied.
+ */
+function applyClosureAFloor(a: AnchorWealth, c: ClosureACeilings): AnchorWealth {
+  if (a.median <= 0) return a; // degenerate: nothing to bound against
+  // Body-shoulder and top-1% tiers track the body's net growth exactly
+  // (ratio pinned at the year-0 in-domain value): stationary, never reverts,
+  // lognormal body always calibratable. This IS the net-growth floor at the
+  // body for those tiers.
+  const top10 = c.r10 * a.median;
+  const top1 = c.r1 * a.median;
+  // Top-0.1%: the natural evolved tail ratio is smoothly squashed toward
+  // RHO_MAX (asymptote, never reached). Concentration keeps creeping up every
+  // year (distinct per horizon, strictly monotone, never reverts) and
+  // plateaus — a true asymptote, not a hard flat clamp. Only applied when the
+  // natural ratio would EXCEED top1's pinned level relative to RHO_0 (i.e. the
+  // tail is concentrating); otherwise top01 passes through. Floor at top1's net
+  // growth direction is implicit: squashRho is strictly increasing so top01
+  // never drops below its prior in-domain trajectory.
+  const rhoNat = top1 > 0 ? a.top01 / top1 : c.rho0;
+  const top01 = squashRho(rhoNat, c.rho0) * top1;
+  return { median: a.median, top10, top1, top01 };
+}
+
 /**
  * Build an Anchors object from an AnchorWealth (for re-calibration in endogenous mode).
  * Preserves original basis/source/note from params.anchors.
@@ -213,6 +376,10 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
   // Year 0 is always a fresh, in-domain calibration → never degraded.
   let curveDegraded = false;
   let anchorWealth = initialAnchorWealth(params.anchors);
+
+  // Closure A (debug session model-alpha-domain-freeze): year-0 body-relative
+  // ratio ceilings, captured once from the initial in-domain calibration.
+  const closureCeilings = closureACeilings(anchorWealth);
 
   // User is a test-particle: starts with inputs.currentWealth (A5)
   let userWealth = inputs.currentWealth;
@@ -279,7 +446,20 @@ export function projectionEngine(inputs: Inputs, params: Params): ProjectionResu
     if (year === horizon) break;
 
     // Step 4: Advance all 4 anchor tiers (D-08 ordinary annuity, drag applied once — step 3)
-    const newAnchorWealth = stepAnchorWealth(anchorWealth, params.returnByTier, assetInflation, savings);
+    const steppedAnchorWealth = stepAnchorWealth(anchorWealth, params.returnByTier, assetInflation, savings);
+
+    // Step 4b: Closure A tail-ratio asymptote net-growth floor (debug session
+    // model-alpha-domain-freeze, maintainer decision LOCKED). Gated on
+    // endogenous AND dragStrength>0 so the drag-off analytic golden master
+    // (D-11/MODEL-06) and the dragStrength=0 collapse invariant are byte-for-byte
+    // preserved. The floored anchors become BOTH the next-year state AND the
+    // input to the calibrateCurve whose curve is attached to the snapshot —
+    // the exact path deriveBandShares (VIZ-07) consumes — so the corrected
+    // dynamics flow through with no wiring gap.
+    const newAnchorWealth =
+      params.distributionEvolution === 'endogenous' && dragStrength > 0
+        ? applyClosureAFloor(steppedAnchorWealth, closureCeilings)
+        : steppedAnchorWealth;
 
     // Step 5: Re-fit curve to evolved anchors (D-06) or shift-scale fixed shape (D-07).
     // Endogenous fallback: heterogeneous returns cause the top01/top1 ratio to grow over

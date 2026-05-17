@@ -601,7 +601,7 @@ export function selectDonutOption(
   // construction with the visible slices (WR-01).
   const top1Share = lb.top01 + lb.band99to999 + lb.band90to99;
   const centerText = lb.degraded
-    ? `Calibration unavailable\n(year ${last.year})`
+    ? `Beyond model domain\n(year ${last.year})`
     : `Top 1% hold\n${(top1Share * 100).toFixed(1)}%\n(year ${last.year})`;
 
   return {
