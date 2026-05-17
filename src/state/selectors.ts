@@ -540,9 +540,12 @@ export function selectShareOption(
         const paramsArr = Array.isArray(params) ? params : [params];
         if (!paramsArr.length) return '';
         const dataIndex = paramsArr[0]!.dataIndex ?? 0;
-        const snap = result.series[dataIndex];
-        if (!snap) return '';
-        const year = snap.year;
+        // WR-03: the x-axis categories come from bandSeries (line above), so
+        // resolve the year from the SAME series that drives the axis to keep
+        // tooltip and axis from a single source of truth even if band/result
+        // series ever differ in length (e.g. a dropped degraded terminal year).
+        const year = bandSeries[dataIndex]?.year;
+        if (year === undefined) return '';
         const lines = paramsArr.map((p) => {
           // Category-axis series carry plain numeric values (not [x,y] pairs).
           const val = (p.value as number) ?? 0;
