@@ -476,6 +476,14 @@ describe('ENTRY-05: selectSummary', () => {
     const nominalSummary: Summary = selectSummary(nominalResult);
     expect(nominalSummary.endRank).toBe(realSummary.endRank);
   });
+
+  it('CR-01/D-14: realGrowthMultiple is identical in real and nominal basis', () => {
+    const real = selectSummary(result, result);                         // basis=real
+    const reinf = selectReinflated(result, 'nominal', 0.025);
+    const nominal = selectSummary(reinf, result);                       // basis=nominal
+    expect(nominal.realGrowthMultiple).toBeCloseTo(real.realGrowthMultiple, 10);
+    expect(nominal.endingWealth).toBeGreaterThan(real.endingWealth);    // nominal inflated
+  });
 });
 
 // ---------------------------------------------------------------------------
